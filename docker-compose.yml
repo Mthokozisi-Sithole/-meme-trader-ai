@@ -1,0 +1,100 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: memetrader
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/memetrader
+      REDIS_URL: redis://redis:6379/0
+      DEBUG: "false"
+      COINGECKO_API_KEY: "${COINGECKO_API_KEY:-}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/memetrader
+      REDIS_URL: redis://redis:6379/0
+      SIGNAL_REFRESH_INTERVAL_SECONDS: "30"
+      COINGECKO_MAX_PAGES: "4"
+      COINGECKO_API_KEY: "${COINGECKO_API_KEY:-}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: python -m app.worker.tasks
+
+  dex-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/memetrader
+      REDIS_URL: redis://redis:6379/0
+      # Tier 1 — Core data pipelines (free = works without key; keyed = add to .env)
+      BIRDEYE_API_KEY: "${BIRDEYE_API_KEY:-}"          # birdeye.so  → Solana new pairs + whale tracking
+      MORALIS_API_KEY: "${MORALIS_API_KEY:-}"          # moralis.io  → multi-chain gainers/trending
+      BITQUERY_API_KEY: "${BITQUERY_API_KEY:-}"        # bitquery.io → real-time GraphQL, Pump.fun events
+      # Tier 2 — EVM infrastructure
+      ALCHEMY_API_KEY: "${ALCHEMY_API_KEY:-}"          # alchemy.com → EVM token prices + whale detection
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: python -m app.worker.dex_tasks
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
