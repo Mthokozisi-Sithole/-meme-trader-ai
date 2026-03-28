@@ -78,8 +78,8 @@ function EventsTable({ events }: { events: LiquidityEvent[] }) {
             <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-dim)" }}>Amount</th>
             <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap hidden md:table-cell" style={{ color: "var(--text-dim)" }}>% Change</th>
             <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-dim)" }}>Risk</th>
-            <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--text-dim)" }}>Dev Wallet</th>
-            <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap hidden md:table-cell" style={{ color: "var(--text-dim)" }}>Status</th>
+            <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap hidden sm:table-cell" style={{ color: "var(--text-dim)" }}>Dev Wallet</th>
+            <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-dim)" }}>Status</th>
             <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap hidden xl:table-cell" style={{ color: "var(--text-dim)" }}>Time</th>
           </tr>
         </thead>
@@ -130,7 +130,7 @@ function EventsTable({ events }: { events: LiquidityEvent[] }) {
               <td className="px-3 py-2">
                 <RiskScore score={e.risk_score} />
               </td>
-              <td className="px-3 py-2 hidden lg:table-cell">
+              <td className="px-3 py-2 hidden sm:table-cell">
                 {e.is_dev_wallet ? (
                   <span
                     className="text-[11px] font-semibold px-1.5 py-0.5"
@@ -142,7 +142,7 @@ function EventsTable({ events }: { events: LiquidityEvent[] }) {
                   <span style={{ color: "var(--text-dim)", fontSize: "11px" }}>—</span>
                 )}
               </td>
-              <td className="px-3 py-2 hidden md:table-cell">
+              <td className="px-3 py-2">
                 {e.is_suspicious ? (
                   <span
                     className="text-[11px] font-bold px-1.5 py-0.5"
