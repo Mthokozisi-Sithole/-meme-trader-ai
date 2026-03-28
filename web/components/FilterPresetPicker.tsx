@@ -22,10 +22,7 @@ const TYPE_COLOR: Record<string, string> = {
 
 export function FilterPresetPicker({ presets, activeId, matchCounts, onSelect }: Props) {
   return (
-    <div
-      className="rounded-lg overflow-hidden"
-      style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
-    >
+    <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
       {/* Header */}
       <div
         className="flex items-center justify-between px-3 py-2 border-b"
@@ -40,8 +37,8 @@ export function FilterPresetPicker({ presets, activeId, matchCounts, onSelect }:
           </span>
           {activeId && (
             <span
-              className="text-[9px] px-1.5 py-0.5 rounded font-bold"
-              style={{ background: "rgba(68,136,255,0.2)", color: "var(--blue)" }}
+              className="text-[9px] px-1.5 py-0.5 font-bold border"
+              style={{ borderColor: "var(--blue)", color: "var(--blue)" }}
             >
               ACTIVE
             </span>
@@ -50,7 +47,7 @@ export function FilterPresetPicker({ presets, activeId, matchCounts, onSelect }:
         {activeId && (
           <button
             onClick={() => onSelect(null)}
-            className="text-[10px] transition-opacity hover:opacity-60"
+            className="text-[10px] hover:opacity-60 transition-opacity"
             style={{ color: "var(--text-dim)" }}
           >
             ✕ Clear preset
@@ -59,7 +56,7 @@ export function FilterPresetPicker({ presets, activeId, matchCounts, onSelect }:
       </div>
 
       {/* Preset grid */}
-      <div className="p-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-1.5">
+      <div className="p-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-1">
         {presets.map((p) => {
           const isActive = activeId === p.id;
           const count = matchCounts[p.id] ?? 0;
@@ -69,40 +66,34 @@ export function FilterPresetPicker({ presets, activeId, matchCounts, onSelect }:
             <button
               key={p.id}
               onClick={() => onSelect(isActive ? null : p.id)}
-              className="relative text-left rounded-lg p-2.5 transition-all"
+              className="relative text-left p-2.5 transition-colors"
               style={{
-                background: isActive ? p.bgGlow : "var(--bg-surface)",
+                background: isActive ? "var(--bg-card-hover)" : "var(--bg-surface)",
                 border: `1px solid ${isActive ? p.color : "var(--border)"}`,
-                boxShadow: isActive ? `0 0 12px ${p.bgGlow}` : "none",
-                transform: isActive ? "scale(1.02)" : "scale(1)",
+                borderLeft: isActive ? `3px solid ${p.color}` : "1px solid var(--border)",
               }}
               title={`${p.intent}\n\nInsight: ${p.insight}`}
             >
               {/* Type badge */}
               <div
-                className="absolute top-1.5 right-1.5 text-[8px] font-black px-1 rounded"
-                style={{
-                  color: typeColor,
-                  background: `${typeColor}18`,
-                }}
+                className="absolute top-1.5 right-1.5 text-[8px] font-black px-1 border"
+                style={{ color: typeColor, borderColor: typeColor }}
               >
                 {TYPE_LABEL[p.type]}
               </div>
 
-              {/* Emoji + name */}
+              {/* Emoji */}
               <div className="flex items-start gap-1.5 mb-1.5">
                 <span className="text-base leading-none">{p.emoji}</span>
               </div>
+
               <div
                 className="text-[10px] font-bold leading-tight"
                 style={{ color: isActive ? p.color : "var(--text-primary)" }}
               >
                 {p.shortName}
               </div>
-              <div
-                className="text-[9px] mt-0.5 leading-tight"
-                style={{ color: "var(--text-dim)" }}
-              >
+              <div className="text-[9px] mt-0.5 leading-tight" style={{ color: "var(--text-dim)" }}>
                 {p.intent}
               </div>
 
@@ -119,10 +110,10 @@ export function FilterPresetPicker({ presets, activeId, matchCounts, onSelect }:
                 </span>
               </div>
 
-              {/* Active bar */}
+              {/* Active bottom bar */}
               {isActive && (
                 <div
-                  className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b"
+                  className="absolute bottom-0 left-0 right-0 h-[2px]"
                   style={{ background: p.color }}
                 />
               )}
@@ -137,10 +128,11 @@ export function FilterPresetPicker({ presets, activeId, matchCounts, onSelect }:
         if (!p) return null;
         return (
           <div
-            className="mx-2 mb-2 px-3 py-2 rounded-lg text-xs"
+            className="mx-2 mb-2 px-3 py-2 text-xs border-l-2"
             style={{
-              background: p.bgGlow,
-              border: `1px solid ${p.color}33`,
+              background: "var(--bg-surface)",
+              border: `1px solid var(--border)`,
+              borderLeft: `3px solid ${p.color}`,
             }}
           >
             <span className="font-bold" style={{ color: p.color }}>
@@ -151,7 +143,7 @@ export function FilterPresetPicker({ presets, activeId, matchCounts, onSelect }:
             </span>
             <span
               className="ml-2 pl-2"
-              style={{ color: "var(--text-dim)", borderLeft: `1px solid ${p.color}44` }}
+              style={{ color: "var(--text-dim)", borderLeft: `1px solid var(--border)` }}
             >
               💡 {p.insight}
             </span>

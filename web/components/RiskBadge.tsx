@@ -1,22 +1,25 @@
 import type { Band, RiskLevel } from "@/types";
 
-const BAND_STYLES: Record<Band, string> = {
-  "Strong Buy": "bg-green-100 text-green-800 border-green-300",
-  Watch: "bg-yellow-100 text-yellow-800 border-yellow-300",
-  Risky: "bg-orange-100 text-orange-800 border-orange-300",
-  Avoid: "bg-red-100 text-red-800 border-red-300",
+const BAND_COLOR: Record<Band, { color: string; bg: string }> = {
+  "Strong Buy": { color: "var(--green)", bg: "rgba(0,217,126,0.1)" },
+  Watch:        { color: "var(--yellow)", bg: "rgba(245,197,67,0.1)" },
+  Risky:        { color: "#f97316", bg: "rgba(249,115,22,0.1)" },
+  Avoid:        { color: "var(--red)", bg: "rgba(255,68,102,0.1)" },
 };
 
-const RISK_STYLES: Record<RiskLevel, string> = {
-  low: "bg-green-50 text-green-700",
-  medium: "bg-yellow-50 text-yellow-700",
-  high: "bg-red-50 text-red-700",
+const RISK_COLOR: Record<RiskLevel, { color: string }> = {
+  low:     { color: "var(--green)" },
+  medium:  { color: "var(--yellow)" },
+  high:    { color: "#f97316" },
+  extreme: { color: "var(--red)" },
 };
 
 export function BandBadge({ band }: { band: Band }) {
+  const s = BAND_COLOR[band] ?? BAND_COLOR["Avoid"];
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded border text-xs font-semibold ${BAND_STYLES[band]}`}
+      className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border"
+      style={{ color: s.color, background: s.bg, borderColor: s.color }}
     >
       {band}
     </span>
@@ -24,11 +27,13 @@ export function BandBadge({ band }: { band: Band }) {
 }
 
 export function RiskBadge({ level }: { level: RiskLevel }) {
+  const s = RISK_COLOR[level] ?? RISK_COLOR["high"];
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${RISK_STYLES[level]}`}
+      className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold uppercase border"
+      style={{ color: s.color, borderColor: s.color }}
     >
-      {level.toUpperCase()}
+      {level}
     </span>
   );
 }

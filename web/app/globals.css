@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --bg-base: #08080f;
-  --bg-surface: #0d0d1a;
-  --bg-card: #111122;
-  --bg-card-hover: #161630;
+  --bg-base: #0a0a0f;
+  --bg-surface: #0f0f18;
+  --bg-card: #13131f;
+  --bg-card-hover: #18182a;
   --border: #1e1e3a;
-  --border-glow: #3b3b6b;
+  --border-active: #3b3b6b;
   --text-primary: #e8e8f0;
   --text-secondary: #7070a0;
   --text-dim: #404060;
@@ -18,10 +18,14 @@
   --blue: #4488ff;
   --purple: #a855f7;
   --cyan: #22d3ee;
+
+  /* Flat UI — no radius anywhere */
+  --radius: 0px;
 }
 
 * {
   box-sizing: border-box;
+  border-radius: 0 !important;
 }
 
 html, body {
@@ -29,18 +33,24 @@ html, body {
   color: var(--text-primary);
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 2px; }
+/* Flat scrollbar */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb { background: var(--border-active); }
 
-/* Monospace number utility */
+/* Monospace numbers */
 .mono { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace; }
 
-/* Glow effects */
-.glow-green { box-shadow: 0 0 20px rgba(0, 217, 126, 0.15); }
-.glow-red { box-shadow: 0 0 20px rgba(255, 68, 102, 0.15); }
-.glow-blue { box-shadow: 0 0 20px rgba(68, 136, 255, 0.15); }
+/* Flat badge utility */
+.badge {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
 
 /* Pulse animation for live indicator */
 @keyframes livePulse {
@@ -49,7 +59,7 @@ html, body {
 }
 .live-dot { animation: livePulse 1.5s ease-in-out infinite; }
 
-/* Ticker scroll animation */
+/* Ticker scroll */
 @keyframes tickerScroll {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -57,17 +67,12 @@ html, body {
 .ticker-track { animation: tickerScroll 30s linear infinite; }
 .ticker-track:hover { animation-play-state: paused; }
 
-/* Fade-in for new items */
+/* Fade-in */
 @keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(-4px); }
+  from { opacity: 0; transform: translateY(-3px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.fade-in { animation: fadeSlideIn 0.3s ease-out; }
-
-/* Score ring */
-@keyframes scoreRing {
-  from { stroke-dashoffset: 283; }
-}
+.fade-in { animation: fadeSlideIn 0.2s ease-out; }
 
 /* Terminal cursor blink */
 @keyframes blink {
@@ -79,3 +84,9 @@ html, body {
   animation: blink 1s step-end infinite;
   color: var(--green);
 }
+
+/* Flat button base */
+button:focus { outline: 1px solid var(--border-active); outline-offset: 0; }
+
+/* Flat table */
+table { border-collapse: collapse; width: 100%; }

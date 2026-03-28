@@ -1,5 +1,5 @@
 export type Band = "Strong Buy" | "Watch" | "Risky" | "Avoid";
-export type RiskLevel = "low" | "medium" | "high";
+export type RiskLevel = "low" | "medium" | "high" | "extreme";
 
 export interface Coin {
   id: number;
