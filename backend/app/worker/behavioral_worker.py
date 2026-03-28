@@ -39,7 +39,7 @@ async def _snapshot_dex_tokens(db) -> int:
     ts_repo = TimeseriesRepository(db)
 
     # Fetch top tokens by snipe_score
-    tokens = await repo.list(limit=MAX_TOKENS_PER_CYCLE, snipe_only=False)
+    tokens = await repo.get_all(limit=MAX_TOKENS_PER_CYCLE, snipe_only=False)
     now = datetime.utcnow().replace(second=0, microsecond=0)  # minute-level bucket
 
     saved = 0
@@ -47,6 +47,12 @@ async def _snapshot_dex_tokens(db) -> int:
         if not t.price_usd:
             continue
         try:
+            # Derive buy pressure from 5m buy/sell counts if available
+            buys = t.buys_5m or 0
+            sells = t.sells_5m or 0
+            total = buys + sells
+            bp = round((buys / total) * 100) if total > 0 else None
+
             entry = TimeseriesCreate(
                 token_address=t.token_address,
                 chain=t.chain,
@@ -57,13 +63,12 @@ async def _snapshot_dex_tokens(db) -> int:
                 price_low=t.price_usd,
                 price_close=t.price_usd,
                 volume_usd=t.volume_5m,
-                buy_pressure_pct=t.buy_pressure_pct,
+                buy_pressure_pct=bp,
                 liquidity_usd=t.liquidity_usd,
                 market_cap=t.market_cap,
-                holder_count=t.holders,
                 buys=t.buys_5m,
                 sells=t.sells_5m,
-                price_change_pct=t.price_change_5m,
+                snipe_score=t.snipe_score,
             )
             await ts_repo.upsert(entry)
             saved += 1
