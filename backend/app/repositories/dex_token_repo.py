@@ -46,7 +46,12 @@ class DexTokenRepository:
 
     async def upsert(self, data: DexTokenCreate) -> DexToken:
         """Insert or update a token record (upsert on chain + token_address)."""
+        from datetime import datetime
         values = data.model_dump()
+        # Strip timezone info from datetime fields — DB column is TIMESTAMP WITHOUT TIME ZONE
+        for key, val in values.items():
+            if isinstance(val, datetime) and val.tzinfo is not None:
+                values[key] = val.replace(tzinfo=None)
 
         stmt = (
             insert(DexToken)
