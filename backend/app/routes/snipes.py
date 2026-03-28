@@ -9,7 +9,7 @@ from app.schemas.dex_token import DexTokenOut, SnipeOpportunity
 router = APIRouter(tags=["snipes"])
 
 
-@router.get("/", response_model=List[SnipeOpportunity])
+@router.get("", response_model=List[SnipeOpportunity])
 async def list_snipe_opportunities(
     limit: int = Query(50, le=200),
     max_age_hours: float = Query(48, description="Only show snipes younger than N hours"),

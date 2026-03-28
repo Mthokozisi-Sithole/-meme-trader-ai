@@ -66,12 +66,12 @@ export const api = {
       if (params?.limit != null) q.set("limit", String(params.limit));
       if (params?.offset != null) q.set("offset", String(params.offset));
       const qs = q.toString();
-      return apiFetch<Coin[]>(`/coins/${qs ? `?${qs}` : ""}`);
+      return apiFetch<Coin[]>(`/coins${qs ? `?${qs}` : ""}`);
     },
     get: (symbol: string) => apiFetch<Coin>(`/coins/${symbol}`),
   },
   signals: {
-    list: (limit = 50) => apiFetch<Signal[]>(`/signals/?limit=${limit}`),
+    list: (limit = 50) => apiFetch<Signal[]>(`/signals?limit=${limit}`),
     forCoin: (symbol: string) => apiFetch<Signal[]>(`/signals/${symbol}`),
     generate: (symbol: string) =>
       apiFetch<Signal>(`/signals/${symbol}/generate`, { method: "POST" }),
@@ -82,7 +82,7 @@ export const api = {
       if (params?.limit != null) q.set("limit", String(params.limit));
       if (params?.max_age_hours != null) q.set("max_age_hours", String(params.max_age_hours));
       const qs = q.toString();
-      return apiFetch<DexToken[]>(`/snipes/${qs ? `?${qs}` : ""}`);
+      return apiFetch<DexToken[]>(`/snipes${qs ? `?${qs}` : ""}`);
     },
     tokens: (params?: { chain?: string; snipe_only?: boolean; min_score?: number; search?: string; limit?: number }) => {
       const q = new URLSearchParams();
@@ -97,7 +97,7 @@ export const api = {
   },
   alerts: {
     list: (unreadOnly = false) =>
-      apiFetch<Alert[]>(`/alerts/?unread_only=${unreadOnly}`),
+      apiFetch<Alert[]>(`/alerts?unread_only=${unreadOnly}`),
     markRead: (id: number) =>
       apiFetch<void>(`/alerts/${id}/read`, { method: "PATCH" }),
   },

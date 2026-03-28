@@ -11,7 +11,7 @@ from app.services.signal_service import SignalContext, generate_signal
 router = APIRouter(tags=["signals"])
 
 
-@router.get("/", response_model=List[SignalOut])
+@router.get("", response_model=List[SignalOut])
 async def list_signals(limit: int = 50, db: AsyncSession = Depends(get_db)):
     repo = SignalRepository(db)
     signals = await repo.get_latest(limit=limit)

@@ -17,6 +17,7 @@ app = FastAPI(
     version="2.0.0",
     description="Meme coin trading intelligence — CoinGecko signals + DexScreener/Pump.fun sniping.",
     lifespan=lifespan,
+    redirect_slashes=False,
 )
 
 app.add_middleware(

@@ -9,7 +9,7 @@ from app.schemas.alert import AlertOut
 router = APIRouter(tags=["alerts"])
 
 
-@router.get("/", response_model=List[AlertOut])
+@router.get("", response_model=List[AlertOut])
 async def list_alerts(
     unread_only: bool = False,
     limit: int = 100,

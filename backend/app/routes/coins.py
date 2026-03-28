@@ -9,7 +9,7 @@ from app.schemas.coin import CoinCreate, CoinUpdate, CoinOut
 router = APIRouter(tags=["coins"])
 
 
-@router.get("/", response_model=List[CoinOut])
+@router.get("", response_model=List[CoinOut])
 async def list_coins(
     limit: int = Query(250, le=1000),
     offset: int = 0,
@@ -29,7 +29,7 @@ async def get_coin(symbol: str, db: AsyncSession = Depends(get_db)):
     return coin
 
 
-@router.post("/", response_model=CoinOut, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=CoinOut, status_code=status.HTTP_201_CREATED)
 async def create_coin(data: CoinCreate, db: AsyncSession = Depends(get_db)):
     repo = CoinRepository(db)
     existing = await repo.get_by_symbol(data.symbol)
