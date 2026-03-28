@@ -1,0 +1,7 @@
+{
+  "autonomy": true,
+  "default_command": "build-system",
+  "strict_mode": true,
+  "max_iterations": 100,
+  "retry_on_failure": true
+}
