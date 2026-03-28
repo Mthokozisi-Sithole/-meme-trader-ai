@@ -10,7 +10,7 @@ class Alert(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     coin_symbol: Mapped[str] = mapped_column(
-        String(20), ForeignKey("coins.symbol", ondelete="CASCADE"), nullable=False, index=True
+        String(50), ForeignKey("coins.symbol", ondelete="CASCADE"), nullable=False, index=True
     )
     alert_type: Mapped[str] = mapped_column(String(50), nullable=False)
     # e.g. "whale_concentration" | "low_liquidity" | "spike" | "low_holders"

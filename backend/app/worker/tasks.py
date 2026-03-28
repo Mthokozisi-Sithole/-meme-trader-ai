@@ -59,14 +59,14 @@ async def fetch_all_meme_coins() -> list[dict]:
                 # Last partial page — no more data
                 break
 
-            # Respect rate limits between pages
-            await asyncio.sleep(1.5)
+            # Respect rate limits between pages (free tier: ~30 req/min)
+            await asyncio.sleep(3.0)
 
     return all_coins
 
 
 def _map_market_to_coin(item: dict) -> CoinCreate | None:
-    symbol = item.get("symbol", "").upper()
+    symbol = item.get("symbol", "").upper()[:50]
     if not symbol:
         return None
 

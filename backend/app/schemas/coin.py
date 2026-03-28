@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class CoinBase(BaseModel):
-    symbol: str = Field(..., max_length=20)
+    symbol: str = Field(..., max_length=50)
     name: str = Field(..., max_length=100)
     coingecko_id: Optional[str] = None
     image_url: Optional[str] = None

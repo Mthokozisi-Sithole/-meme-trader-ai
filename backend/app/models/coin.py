@@ -9,7 +9,7 @@ class Coin(Base):
     __tablename__ = "coins"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    symbol: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
+    symbol: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     coingecko_id: Mapped[str] = mapped_column(String(100), nullable=True)
     image_url: Mapped[str] = mapped_column(String(500), nullable=True)
