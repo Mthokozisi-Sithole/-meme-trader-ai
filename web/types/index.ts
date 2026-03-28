@@ -210,8 +210,8 @@ export interface LiquidityEvent {
   is_dev_wallet: boolean;
   is_suspicious: boolean;
   risk_score: number;
-  risk_flags: Record<string, unknown> | null;
   tx_hash: string | null;
+  timestamp: string;
   created_at: string;
 }
 

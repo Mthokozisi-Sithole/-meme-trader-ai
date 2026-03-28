@@ -177,8 +177,18 @@ export default function WalletsPage() {
         </div>
       )}
       {wallets && wallets.length === 0 && (
-        <div className="text-center py-16 text-sm" style={{ color: "var(--text-dim)" }}>
-          No wallets found matching the current filters.
+        <div className="py-12 px-4 border text-center space-y-2" style={{ borderColor: "var(--border)", background: "var(--bg-card)" }}>
+          <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            No wallet data yet
+          </p>
+          <p className="text-xs max-w-md mx-auto" style={{ color: "var(--text-dim)" }}>
+            Wallet intelligence requires on-chain transaction indexing. Configure a{" "}
+            <span style={{ color: "var(--blue)" }}>BIRDEYE_API_KEY</span> in your environment to enable
+            wallet-level tracking (smart money, dev wallets, snipers) for Solana tokens.
+          </p>
+          <p className="text-xs" style={{ color: "var(--text-dim)" }}>
+            Behavioral signals and liquidity monitoring are already active without an API key.
+          </p>
         </div>
       )}
 

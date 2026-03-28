@@ -155,7 +155,7 @@ function EventsTable({ events }: { events: LiquidityEvent[] }) {
                 )}
               </td>
               <td className="px-3 py-2 text-xs hidden xl:table-cell" style={{ color: "var(--text-dim)" }}>
-                {fmtTime(e.created_at)}
+                {fmtTime(e.timestamp)}
               </td>
             </tr>
           ))}

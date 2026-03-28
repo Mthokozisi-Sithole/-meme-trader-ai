@@ -29,6 +29,15 @@ class LiquidityRepository:
         await self.db.commit()
         return result.scalar_one()
 
+    async def get_all(self, limit: int = 50) -> Sequence[LiquidityEvent]:
+        q = (
+            select(LiquidityEvent)
+            .order_by(LiquidityEvent.timestamp.desc())
+            .limit(limit)
+        )
+        result = await self.db.execute(q)
+        return result.scalars().all()
+
     async def get_events_for_token(
         self, token_address: str, limit: int = 50
     ) -> Sequence[LiquidityEvent]:

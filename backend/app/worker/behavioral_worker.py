@@ -3,11 +3,10 @@ Behavioral analysis worker — continuously runs pattern detection on active tok
 and persists behavioral signals to the database.
 
 Cycle:
-  1. Fetch distinct (token_address, chain) from token_timeseries (tokens with recent data)
-  2. For each token, run behavioral_engine.analyze_token()
-  3. Sleep for BEHAVIORAL_REFRESH_INTERVAL seconds, repeat
-
-Also persists OHLCV snapshots from dex_tokens into token_timeseries for backtesting.
+  1. Detect liquidity changes vs previous snapshot → persist LiquidityEvents
+  2. Snapshot current token prices → token_timeseries (OHLCV)
+  3. Run behavioral_engine.analyze_token() on tokens with enough history
+  4. Sleep BEHAVIORAL_REFRESH_INTERVAL seconds, repeat
 """
 import asyncio
 import logging
@@ -17,9 +16,12 @@ from sqlalchemy import text
 
 from app.core.database import AsyncSessionLocal
 from app.services.behavioral_engine import analyze_token
+from app.services.liquidity_tracker import assess_liquidity_event, LiquidityEventInput
 from app.repositories.timeseries_repo import TimeseriesRepository
+from app.repositories.liquidity_repo import LiquidityRepository
 from app.repositories.dex_token_repo import DexTokenRepository
 from app.schemas.token_timeseries import TimeseriesCreate
+from app.schemas.liquidity_event import LiquidityEventCreate
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,74 @@ BEHAVIORAL_REFRESH_INTERVAL = 60
 
 # How many tokens to analyze per cycle (to avoid overload)
 MAX_TOKENS_PER_CYCLE = 50
+
+
+async def _detect_liquidity_changes(db) -> int:
+    """
+    Compare each token's current liquidity_usd against its last timeseries snapshot.
+    Create LiquidityEvent records for changes > 5%.
+    Only fires when there IS a previous snapshot (so skip on first cycle per token).
+    """
+    dex_repo = DexTokenRepository(db)
+    ts_repo = TimeseriesRepository(db)
+    liq_repo = LiquidityRepository(db)
+
+    tokens = await dex_repo.get_all(limit=MAX_TOKENS_PER_CYCLE, snipe_only=False)
+    now = datetime.utcnow()
+    events_created = 0
+
+    for t in tokens:
+        if not t.liquidity_usd or t.liquidity_usd <= 0:
+            continue
+
+        # Get the last snapshot to compare against
+        prev = await ts_repo.get_latest(t.token_address, t.chain)
+        if not prev or not prev.liquidity_usd or prev.liquidity_usd <= 0:
+            continue
+
+        pct_change = ((t.liquidity_usd - prev.liquidity_usd) / prev.liquidity_usd) * 100
+        if abs(pct_change) < 5.0:  # less than 5% — ignore noise
+            continue
+
+        event_type = "add" if pct_change > 0 else "remove"
+        amount_usd = abs(t.liquidity_usd - prev.liquidity_usd)
+
+        liq_input = LiquidityEventInput(
+            event_type=event_type,
+            amount_usd=amount_usd,
+            pct_change=pct_change,
+            is_dev_wallet=False,
+            wallet_address="aggregate",
+            token_age_hours=t.token_age_hours,
+            current_liquidity_usd=t.liquidity_usd,
+            prev_liquidity_usd=prev.liquidity_usd,
+            transaction_hash=f"auto_{t.token_address[:12]}",
+        )
+        risk = assess_liquidity_event(liq_input)
+
+        try:
+            event = LiquidityEventCreate(
+                token_address=t.token_address,
+                token_symbol=t.symbol,
+                chain=t.chain,
+                event_type=event_type,
+                amount_usd=amount_usd,
+                pct_change=round(pct_change, 2),
+                liquidity_before=prev.liquidity_usd,
+                liquidity_after=t.liquidity_usd,
+                wallet_address=None,
+                is_dev_wallet=False,
+                is_suspicious=risk.is_suspicious,
+                risk_score=risk.risk_score,
+                tx_hash=None,
+                timestamp=now,
+            )
+            await liq_repo.add_event(event)
+            events_created += 1
+        except Exception as exc:
+            logger.debug(f"Liquidity event error for {t.symbol}: {exc}")
+
+    return events_created
 
 
 async def _snapshot_dex_tokens(db) -> int:
@@ -103,7 +173,12 @@ async def _get_active_tokens(db) -> list[tuple[str, str, str | None]]:
 async def run_behavioral_cycle() -> None:
     """Run one full behavioral analysis cycle."""
     async with AsyncSessionLocal() as db:
-        # 1. Snapshot current token prices into timeseries
+        # 1. Detect liquidity changes vs previous snapshot (before we overwrite it)
+        liq_events = await _detect_liquidity_changes(db)
+        if liq_events:
+            logger.info(f"[behavioral] Created {liq_events} liquidity events")
+
+        # 2. Snapshot current token prices into timeseries
         snapped = await _snapshot_dex_tokens(db)
         logger.info(f"[behavioral] Snapshotted {snapped} tokens into timeseries")
 

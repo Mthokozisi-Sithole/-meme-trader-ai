@@ -37,8 +37,7 @@ async def list_liquidity_events(
     elif is_suspicious:
         events = await repo.get_recent_suspicious(limit=limit)
     else:
-        # Fallback: recent suspicious or all events — use suspicious endpoint for broader queries
-        events = await repo.get_recent_suspicious(limit=limit)
+        events = await repo.get_all(limit=limit)
 
     # Apply additional filters post-query
     if chain is not None:
