@@ -1,14 +1,28 @@
-# MemeTrader AI — Intelligence Terminal
+<div align="center">
 
-> Real-time meme coin trading signals, DEX scanner, and market intelligence platform.
+# ⚡ MemeTrader AI — Intelligence Terminal
 
-A full-stack, production-ready system that combines CoinGecko fundamental analysis, DexScreener/Pump.fun sniping, narrative classification, and multi-source on-chain data from 10 different providers into actionable trading signals with precise entry/exit/stop-loss levels, risk management, and a live dark-terminal dashboard.
+### Real-time meme coin trading signals · DEX scanner · Market intelligence
 
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Next.js](https://img.shields.io/badge/Next.js-14-000000?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://postgresql.org)
+[![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docker.com)
+[![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
+
+A full-stack, production-ready system that combines CoinGecko fundamental analysis, DexScreener/Pump.fun sniping, narrative classification, and multi-source on-chain data from **10 different providers** into actionable trading signals with precise entry/exit/stop-loss levels, risk management, and a live dark-terminal dashboard.
+
+</div>
+
+> [!WARNING]
 > **Not financial advice.** This is a research and analytics tool. Meme coins are extremely high risk. Trading based on signals from any tool, including this one, can result in total loss of capital. Always do your own research (DYOR).
 
 ---
 
-## What Is This?
+## 🧠 What Is This?
 
 MemeTrader AI is a platform built for people who want to track and analyse meme coin opportunities in real time. It works like this:
 
@@ -20,7 +34,7 @@ MemeTrader AI is a platform built for people who want to track and analyse meme 
 
 ---
 
-## Table of Contents
+## 📋 Table of Contents
 
 - [Architecture Overview](#architecture-overview)
 - [Quick Start](#quick-start)
@@ -41,11 +55,28 @@ MemeTrader AI is a platform built for people who want to track and analyse meme 
 - [Environment Variables](#environment-variables)
 - [Rate Limiting Awareness](#rate-limiting-awareness)
 - [Project Structure](#project-structure)
-- [License](#license)
+- [License](#-license)
 
 ---
 
-## Architecture Overview
+## ✨ Highlights
+
+| | Feature | Detail |
+|---|---|---|
+| 📡 | **10 Data Sources** | CoinGecko, DexScreener, Pump.fun, GeckoTerminal, GMGN, SolanaFM, Birdeye, Moralis, Bitquery, Alchemy |
+| ⚡ | **Live WebSocket Streams** | 3 real-time streams — signals, DEX snipes, ticker — snapshot on connect + 5s updates |
+| 🧠 | **Narrative Intelligence** | 9-category keyword classifier (AI · Political · Cult · Animal · Space · Celebrity · Gaming · Food · Finance) |
+| 📊 | **Multi-Factor Scoring** | Composite algorithm: sentiment + technical + liquidity + momentum, all 0–100 |
+| 🛡️ | **Automatic Risk Flags** | 10 risk conditions detected — penalties applied, stop-loss tightened, alerts raised |
+| 🎯 | **7-Gate Snipe Filter** | Only the best DEX opportunities surface — all 7 criteria must pass simultaneously |
+| 🔁 | **30-Second Cycles** | Both workers scan and score continuously — data is never more than 30 seconds stale |
+| 📱 | **Fully Responsive UI** | Works on desktop, tablet, and mobile — hamburger nav, progressive column hiding |
+| 🐳 | **One-Command Deploy** | `docker compose up --build` — 6 containers, zero manual setup |
+| 🔑 | **Zero-Key Operation** | Fully functional with no API keys — Tier 1 & 2 sources are always free |
+
+---
+
+## 🏗️ Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -119,7 +150,7 @@ MemeTrader AI is a platform built for people who want to track and analyse meme 
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
 ```bash
 # 1. Clone the repository
@@ -142,21 +173,21 @@ docker compose up --build
 open http://localhost:3000
 ```
 
-**What happens on first start:**
-- `postgres` and `redis` start and pass their health checks
-- `api` runs `alembic upgrade head` to create all tables, then starts uvicorn
-- `worker` starts fetching CoinGecko data immediately
-- `dex-worker` starts scanning DexScreener, Pump.fun, GeckoTerminal, etc.
-- `web` builds the Next.js app and serves it on port 3000
-- After ~30-60 seconds, the dashboard will show live data
+> **What happens on first start:**
+> - `postgres` and `redis` start and pass their health checks
+> - `api` runs `alembic upgrade head` to create all tables, then starts uvicorn
+> - `worker` starts fetching CoinGecko data immediately
+> - `dex-worker` starts scanning DexScreener, Pump.fun, GeckoTerminal, etc.
+> - `web` builds the Next.js app and serves it on port 3000
+> - After ~30-60 seconds, the dashboard will show live data
 
 ---
 
-## Docker Services
+## 🐳 Docker Services
 
 Six containers run together, orchestrated by Docker Compose:
 
-### `postgres` — PostgreSQL 16 Alpine
+### 🐘 `postgres` — PostgreSQL 16 Alpine
 - **Port:** 5432
 - **Database:** `memetrader`
 - **User/Password:** `postgres / postgres` (change in production)
@@ -164,13 +195,13 @@ Six containers run together, orchestrated by Docker Compose:
 - **Healthcheck:** `pg_isready -U postgres` every 5 seconds
 - All other services that need the database wait for this healthcheck before starting
 
-### `redis` — Redis 7 Alpine
+### 🔴 `redis` — Redis 7 Alpine
 - **Port:** 6379
 - **Purpose:** Cache layer and message broker for inter-service communication
 - **Healthcheck:** `redis-cli ping` every 5 seconds
 - Used by the API and workers for caching and pub/sub
 
-### `api` — FastAPI Backend
+### ⚡ `api` — FastAPI Backend
 - **Port:** 8000
 - **Build context:** `./backend`
 - **Startup command:** `alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload`
@@ -179,7 +210,7 @@ Six containers run together, orchestrated by Docker Compose:
 - Depends on: `postgres` (healthy) + `redis` (healthy)
 - Volume-mounted: `./backend:/app` (code changes reflect without rebuild in dev)
 
-### `worker` — Signal Generation Worker
+### 🔁 `worker` — Signal Generation Worker
 - **No exposed port** — background process only
 - **Build context:** `./backend` (same image as `api`)
 - **Command:** `python -m app.worker.tasks`
@@ -188,7 +219,7 @@ Six containers run together, orchestrated by Docker Compose:
 - Depends on: `postgres` (healthy)
 - Volume-mounted: `./backend:/app`
 
-### `dex-worker` — DEX Token Sniping Worker
+### 🕵️ `dex-worker` — DEX Token Sniping Worker
 - **No exposed port** — background process only
 - **Build context:** `./backend` (same image as `api`)
 - **Command:** `python -m app.worker.dex_tasks`
@@ -198,7 +229,7 @@ Six containers run together, orchestrated by Docker Compose:
 - Volume-mounted: `./backend:/app`
 - Accepts all optional API keys as environment variables
 
-### `web` — Next.js Frontend
+### 🌐 `web` — Next.js Frontend
 - **Port:** 3000
 - **Build context:** `./web`
 - **Startup:** `node server.js` (standalone Next.js output)
@@ -208,9 +239,9 @@ Six containers run together, orchestrated by Docker Compose:
 
 ---
 
-## Background Workers
+## ⚙️ Background Workers
 
-### Worker 1 — Signal Generation (`backend/app/worker/tasks.py`)
+### 🔁 Worker 1 — Signal Generation (`backend/app/worker/tasks.py`)
 
 **Purpose:** Keep the `coins` and `signals` tables up to date with the latest CoinGecko data and freshly generated trading signals.
 
@@ -251,7 +282,7 @@ Six containers run together, orchestrated by Docker Compose:
 
 ---
 
-### Worker 2 — DEX Token Sniping (`backend/app/worker/dex_tasks.py`)
+### 🕵️ Worker 2 — DEX Token Sniping (`backend/app/worker/dex_tasks.py`)
 
 **Purpose:** Continuously discover new DEX token launches across multiple blockchains, score them for sniping potential, and surface the best opportunities.
 
@@ -304,7 +335,7 @@ Six containers run together, orchestrated by Docker Compose:
 
 ---
 
-## Backend API — All Endpoints
+## 🔌 Backend API — All Endpoints
 
 **Base URLs:**
 - Via Next.js proxy (browser-safe): `http://localhost:3000/api`
@@ -314,7 +345,7 @@ All endpoints return JSON. Error responses include `{detail: "message"}`.
 
 ---
 
-### Health Check
+### 🏥 Health Check
 
 #### `GET /health`
 Checks database connectivity. Use this to verify the API is running and connected.
@@ -330,7 +361,7 @@ If the database is unreachable: `"db": "error"`
 
 ---
 
-### Coins
+### 🪙 Coins
 
 Tracks up to 1,000 meme coins sourced from CoinGecko. Updated every 30 seconds by the worker.
 
@@ -364,7 +395,7 @@ Partial update — only updates the fields provided in the request body. Other f
 
 ---
 
-### Signals
+### 📡 Signals
 
 Trading signals generated for each coin. Each signal includes a score, band, trade levels, and reasoning.
 
@@ -410,7 +441,7 @@ Triggers an on-demand signal generation for a coin. Fetches the latest coin data
 
 ---
 
-### Alerts
+### 🚨 Alerts
 
 Risk alerts are automatically generated by the worker whenever a risk flag is triggered for a coin.
 
@@ -450,7 +481,7 @@ Marks a single alert as read (dismissed). Sets `is_read = true`.
 
 ---
 
-### Snipes / DEX Tokens
+### 🎯 Snipes / DEX Tokens
 
 DEX token data collected and scored by the DEX worker. This is the sniping intelligence layer.
 
@@ -480,7 +511,7 @@ Returns all tracked DEX tokens with comprehensive filtering options. This is the
 
 ---
 
-### Market Intelligence
+### 📊 Market Intelligence
 
 Aggregated analytics and real-time market data endpoints used by the dashboard.
 
@@ -585,9 +616,9 @@ Returns per-narrative category analytics — how each thematic group is performi
 
 ---
 
-## Scoring Logic — How Signals Are Calculated
+## 📊 Scoring Logic — How Signals Are Calculated
 
-### Signal Score (CoinGecko Coins)
+### 🔢 Signal Score (CoinGecko Coins)
 
 Every coin tracked from CoinGecko gets a composite score calculated by `backend/app/services/scoring.py`:
 
@@ -655,7 +686,7 @@ Volume momentum — how strongly trading activity is growing relative to the 24-
 
 ---
 
-### Signal Bands
+### 🎨 Signal Bands
 
 After the risk-adjusted score is calculated, it maps to a band:
 
@@ -668,9 +699,9 @@ After the risk-adjusted score is calculated, it maps to a band:
 
 ---
 
-## Risk Management — Flags, Penalties, Stop-Loss
+## 🛡️ Risk Management — Flags, Penalties, Stop-Loss
 
-### How Risk Works
+### ⚠️ How Risk Works
 
 Risk evaluation happens in `backend/app/services/risk.py` and runs on every coin after scoring. It can:
 1. **Reduce the composite score** (risk penalty points subtracted)
@@ -678,7 +709,7 @@ Risk evaluation happens in `backend/app/services/risk.py` and runs on every coin
 3. **Create an alert** (notifies the user via the Alerts page)
 4. **Downgrade the band** (a coin might drop from Watch to Risky after risk adjustment)
 
-### Risk Flags — Signal Worker (CoinGecko Coins)
+### 🚩 Risk Flags — Signal Worker (CoinGecko Coins)
 
 These flags apply to coins sourced from CoinGecko:
 
@@ -694,7 +725,7 @@ These flags apply to coins sourced from CoinGecko:
 - 1-2 flags triggered → `medium`
 - 3 or more flags triggered → `high`
 
-### Stop-Loss Calculation
+### 📉 Stop-Loss Calculation
 
 ```
 base_pct = {
@@ -717,7 +748,7 @@ Example: A "Watch" coin with `low_liquidity` flag triggered:
 
 The stop-loss tightens automatically for riskier coins, reducing the maximum loss on bad trades.
 
-### Risk Flags — DEX Worker (On-Chain / DEX Tokens)
+### 🚩 Risk Flags — DEX Worker (On-Chain / DEX Tokens)
 
 These additional flags apply to tokens discovered via DexScreener, Pump.fun, etc.:
 
@@ -732,11 +763,11 @@ These additional flags apply to tokens discovered via DexScreener, Pump.fun, etc
 
 ---
 
-## Narrative Engine — Category Classification
+## 🎭 Narrative Engine — Category Classification
 
 The narrative engine (`backend/app/services/narrative_engine.py`) classifies every token into a thematic category based on keyword matching. This is important because meme coin pumps are almost always narrative-driven — "AI coins" pump together, "political coins" pump during election cycles, etc.
 
-### How Classification Works
+### 🔍 How Classification Works
 
 1. The token's `symbol` and `name` are lowercased and combined into a search string
 2. Each category's keyword list is checked against this string
@@ -744,7 +775,7 @@ The narrative engine (`backend/app/services/narrative_engine.py`) classifies eve
 4. If no keywords match → category = `Other`
 5. The matched keywords are stored in `narrative_keywords` (JSON array)
 
-### Categories and Full Keyword Lists
+### 📝 Categories and Full Keyword Lists
 
 | Category | Hype Heat Bonus | Full Keyword List |
 |---|---|---|
@@ -759,7 +790,7 @@ The narrative engine (`backend/app/services/narrative_engine.py`) classifies eve
 | **Finance** | +6 pts | defi, yield, stake, earn, vault, safe, dao, treasury, fund, bank, credit, loan, swap |
 | **Other** | 0 pts | No keyword matches |
 
-### Hype Velocity (0-100)
+### 🔥 Hype Velocity (0-100)
 
 Beyond just classifying the category, the engine also calculates a `hype_velocity` score — a measure of how "hot" this narrative is in the current market cycle:
 
@@ -776,11 +807,11 @@ Hype velocity feeds into the momentum component of the snipe score and directly 
 
 ---
 
-## Snipe Scorer — DEX Token Scoring
+## 🎯 Snipe Scorer — DEX Token Scoring
 
 DEX tokens are scored by `backend/app/services/snipe_scorer.py`, which uses a different formula than the CoinGecko signal scorer because DEX data has different available metrics (buy/sell counts, 5-minute windows, on-chain age, social presence).
 
-### Snipe Score Formula
+### 🔢 Snipe Score Formula
 
 ```
 Snipe Score = (0.35 × narrative_score)
@@ -863,7 +894,7 @@ if volume_spike (1m > 100%):             base -= 12
 for each risk_flag:                      base -= 18
 ```
 
-### Sniping Opportunity Gate
+### 🚪 Sniping Opportunity Gate
 
 For a token to be marked `sniping_opportunity = true`, ALL of the following must pass:
 
@@ -881,11 +912,11 @@ If all 7 pass → `sniping_opportunity = true` and the token surfaces in `/snipe
 
 ---
 
-## Signal Service — Trade Level Generation
+## 📈 Signal Service — Trade Level Generation
 
 `backend/app/services/signal_service.py` is the orchestration layer that combines the scorer, risk evaluator, and trade level calculator into a complete signal.
 
-### Full Signal Generation Flow
+### 🔄 Full Signal Generation Flow
 
 ```
 1. Build SignalContext from coin data
@@ -932,11 +963,11 @@ If all 7 pass → `sniping_opportunity = true` and the token surfaces in `/snipe
 
 ---
 
-## External Data Sources
+## 🌐 External Data Sources
 
 MemeTrader AI uses a tiered data architecture. The platform works fully with zero API keys — Tier 1 and Tier 2 are always active and free.
 
-### Tier 0 — Core Fundamental Data
+### 🥇 Tier 0 — Core Fundamental Data
 
 #### CoinGecko
 - **Website:** coingecko.com
@@ -952,7 +983,7 @@ MemeTrader AI uses a tiered data architecture. The platform works fully with zer
 
 ---
 
-### Tier 1 — Free DEX Data (Always Active)
+### 🥈 Tier 1 — Free DEX Data (Always Active)
 
 #### DexScreener
 - **Website:** dexscreener.com
@@ -990,7 +1021,7 @@ MemeTrader AI uses a tiered data architecture. The platform works fully with zer
 
 ---
 
-### Tier 2 — Free On-Chain Pipelines (Always Active)
+### 🥉 Tier 2 — Free On-Chain Pipelines (Always Active)
 
 #### GMGN.ai
 - **Website:** gmgn.ai
@@ -1012,7 +1043,7 @@ MemeTrader AI uses a tiered data architecture. The platform works fully with zer
 
 ---
 
-### Tier 3 — Optional Keyed Pipelines (Graceful Fallback)
+### 🔐 Tier 3 — Optional Keyed Pipelines (Graceful Fallback)
 
 If an API key is not set, the pipeline is skipped silently. The platform continues running with the other sources.
 
@@ -1059,11 +1090,11 @@ If an API key is not set, the pipeline is skipped silently. The platform continu
 
 ---
 
-## Database Models — Full Schema
+## 🗄️ Database Models — Full Schema
 
 The platform uses PostgreSQL 16 with SQLAlchemy 2.x async ORM. All migrations are managed by Alembic and run automatically on startup.
 
-### `coins` Table
+### 🪙 `coins` Table
 
 Stores all meme coins fetched from CoinGecko. Updated every 30 seconds.
 
@@ -1094,7 +1125,7 @@ Stores all meme coins fetched from CoinGecko. Updated every 30 seconds.
 | `created_at` | DateTime | | Record creation timestamp |
 | `updated_at` | DateTime | | Last update timestamp |
 
-### `signals` Table
+### 📡 `signals` Table
 
 Each signal is a point-in-time trading recommendation for a coin. A new signal is generated every 30 seconds per coin.
 
@@ -1117,7 +1148,7 @@ Each signal is a point-in-time trading recommendation for a coin. A new signal i
 | `reasoning` | Text | | Human-readable signal explanation |
 | `created_at` | DateTime | | When this signal was generated |
 
-### `alerts` Table
+### 🚨 `alerts` Table
 
 Risk alerts are created automatically when the worker detects dangerous conditions.
 
@@ -1131,9 +1162,12 @@ Risk alerts are created automatically when the worker detects dangerous conditio
 | `is_read` | Boolean | Default false | Whether the alert has been dismissed |
 | `created_at` | DateTime | | When the alert was raised |
 
-### `dex_tokens` Table
+### 🎯 `dex_tokens` Table
 
 The largest and most complex table. Stores every DEX token discovered by the DEX worker with full market data, scoring, and trade levels.
+
+<details>
+<summary><strong>Identity and Source columns</strong></summary>
 
 **Identity and Source:**
 
@@ -1149,6 +1183,11 @@ The largest and most complex table. Stores every DEX token discovered by the DEX
 | `dex_id` | Text | Which DEX it trades on: `raydium` / `pump` / `uniswap` / `pancakeswap` / etc. |
 | `image_url` | Text | Token logo URL |
 | `dexscreener_url` | Text | Direct link to DexScreener pair page |
+
+</details>
+
+<details>
+<summary><strong>Social, Market, Volume and Trading columns</strong></summary>
 
 **Social and Metadata:**
 
@@ -1222,6 +1261,11 @@ The largest and most complex table. Stores every DEX token discovered by the DEX
 | `large_tx_detected` | Boolean | A large transaction was detected in recent history |
 | `buy_pressure_pct` | Float | Percentage of 5m transactions that were buys |
 
+</details>
+
+<details>
+<summary><strong>Score, Signal and Trade Level columns</strong></summary>
+
 **Scores (all 0-100):**
 
 | Column | Type | Description |
@@ -1261,11 +1305,13 @@ The largest and most complex table. Stores every DEX token discovered by the DEX
 | `created_at` | DateTime | When this record was first created |
 | `updated_at` | DateTime | Last time this record was updated |
 
+</details>
+
 **Unique constraint:** `(chain, token_address)` — one row per token per chain. Workers use `INSERT ... ON CONFLICT DO UPDATE`.
 
 ---
 
-## WebSocket Streams
+## ⚡ WebSocket Streams
 
 The platform provides three real-time WebSocket endpoints. All follow the same pattern:
 
@@ -1280,7 +1326,7 @@ const WS_BASE = typeof window !== "undefined"
   : "ws://localhost:8000";
 ```
 
-### `WS /ws/signals`
+### 📡 `WS /ws/signals`
 
 Streams all trading signals. Used by the Terminal dashboard for live signal updates.
 
@@ -1319,7 +1365,7 @@ Streams all trading signals. Used by the Terminal dashboard for live signal upda
 }
 ```
 
-### `WS /ws/snipes`
+### 🎯 `WS /ws/snipes`
 
 Streams all tracked DEX tokens. Used by the Sniper page and Terminal dashboard.
 
@@ -1366,7 +1412,7 @@ Streams all tracked DEX tokens. Used by the Sniper page and Terminal dashboard.
 }
 ```
 
-### `WS /ws/ticker`
+### 📺 `WS /ws/ticker`
 
 Lightweight stream. Sends only the top 20 tokens with minimal fields. Used for the scrolling ticker strip at the top of the Sniper page — minimal bandwidth.
 
@@ -1400,7 +1446,7 @@ Lightweight stream. Sends only the top 20 tokens with minimal fields. Used for t
 
 ---
 
-## Frontend Pages
+## 🖥️ Frontend Pages
 
 The frontend is a Next.js 14 App Router application. All pages are React Server Components with client-side interactivity via `"use client"` directive where needed. The app uses SWR for HTTP polling and custom WebSocket hooks for live data.
 
@@ -1543,7 +1589,7 @@ Individual coin deep-dive page.
 
 ---
 
-## Frontend Components
+## 🧩 Frontend Components
 
 Components live in `web/components/` and are reusable across pages.
 
@@ -1626,7 +1672,7 @@ Components live in `web/components/` and are reusable across pages.
 
 ---
 
-## Configuration — All Tunable Settings
+## ⚙️ Configuration — All Tunable Settings
 
 All settings live in `backend/app/core/config.py` using Pydantic Settings. Values can be overridden via environment variables or the `.env` file.
 
@@ -1650,7 +1696,9 @@ All settings live in `backend/app/core/config.py` using Pydantic Settings. Value
 
 ---
 
-## Environment Variables
+## 🔑 Environment Variables
+
+> **Tip:** Copy `.env.example` to `.env` and only fill in the keys you have. The platform works with all keys empty — each one simply unlocks more data.
 
 Create a `.env` file in the project root (copy from `.env.example`):
 
@@ -1708,7 +1756,7 @@ DEBUG=false
 
 ---
 
-## Rate Limiting Awareness
+## 🚦 Rate Limiting Awareness
 
 The platform is built to respect free-tier rate limits on all external APIs. Each source has a specific delay strategy:
 
@@ -1729,7 +1777,7 @@ If you add API keys for Tier 3 pipelines, the workers automatically start using 
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 meme-trader-ai/
@@ -1856,6 +1904,14 @@ meme-trader-ai/
 
 ---
 
-## License
+## 📄 License
 
 MIT — free to use, modify, and distribute.
+
+---
+
+<div align="center">
+
+Built with ⚡ by the MemeTrader AI team · Powered by FastAPI + Next.js
+
+</div>
