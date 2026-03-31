@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "meme-trader-ai.fullname" . }}-behavioral-worker
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "meme-trader-ai.labels" . | nindent 4 }}
+    app.kubernetes.io/component: behavioral-worker
+spec:
+  replicas: {{ .Values.replicaCount.behavioralWorker }}
+  selector:
+    matchLabels:
+      {{- include "meme-trader-ai.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: behavioral-worker
+  template:
+    metadata:
+      labels:
+        {{- include "meme-trader-ai.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: behavioral-worker
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "meme-trader-ai.serviceAccountName" . }}
+      containers:
+        - name: behavioral-worker
+          image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}"
+          imagePullPolicy: {{ .Values.image.api.pullPolicy }}
+          command:
+            - python
+            - -m
+            - app.worker.behavioral_worker
+          envFrom:
+            - secretRef:
+                name: {{ include "meme-trader-ai.fullname" . }}-secrets
+            - configMapRef:
+                name: {{ include "meme-trader-ai.fullname" . }}-config
+          resources:
+            {{- toYaml .Values.resources.worker | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

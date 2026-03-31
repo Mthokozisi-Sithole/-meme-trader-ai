@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "meme-trader-ai.fullname" . }}-dex-worker
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "meme-trader-ai.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dex-worker
+spec:
+  replicas: {{ .Values.replicaCount.dexWorker }}
+  selector:
+    matchLabels:
+      {{- include "meme-trader-ai.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: dex-worker
+  template:
+    metadata:
+      labels:
+        {{- include "meme-trader-ai.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: dex-worker
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "meme-trader-ai.serviceAccountName" . }}
+      containers:
+        - name: dex-worker
+          image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}"
+          imagePullPolicy: {{ .Values.image.api.pullPolicy }}
+          command:
+            - python
+            - -m
+            - app.worker.dex_tasks
+          envFrom:
+            - secretRef:
+                name: {{ include "meme-trader-ai.fullname" . }}-secrets
+            - configMapRef:
+                name: {{ include "meme-trader-ai.fullname" . }}-config
+          resources:
+            {{- toYaml .Values.resources.worker | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

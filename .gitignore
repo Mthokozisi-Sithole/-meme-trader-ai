@@ -44,3 +44,6 @@ logs/
 
 # Claude AI project files (local dev only)
 CLAUDE.local.md
+
+# Kubernetes generated manifests
+k8s/manifests.yaml

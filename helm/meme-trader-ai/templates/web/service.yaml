@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "meme-trader-ai.fullname" . }}-web
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "meme-trader-ai.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  {{- if .Values.ingress.enabled }}
+  type: ClusterIP
+  {{- else }}
+  type: LoadBalancer
+  {{- end }}
+  ports:
+    - port: 3000
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "meme-trader-ai.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: web

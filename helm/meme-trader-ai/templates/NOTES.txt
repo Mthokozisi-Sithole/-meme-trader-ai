@@ -1,0 +1,16 @@
+meme-trader-ai has been deployed!
+
+1. Get the application URL:
+{{- if .Values.ingress.enabled }}
+  http{{ if .Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.host }}
+{{- else }}
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "meme-trader-ai.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 3000:3000
+  Visit http://127.0.0.1:3000
+{{- end }}
+
+2. Check all pods are running:
+  kubectl get pods -n {{ .Release.Namespace }}
+
+3. View API logs:
+  kubectl logs -n {{ .Release.Namespace }} -l app={{ include "meme-trader-ai.fullname" . }}-api -f

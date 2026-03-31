@@ -1,0 +1,13 @@
+apiVersion: v2
+name: meme-trader-ai
+description: Real-Time Memecoin Intelligence & Analytics Engine
+type: application
+version: 1.0.0
+appVersion: "2.0.0"
+keywords:
+  - memecoin
+  - trading
+  - analytics
+  - defi
+maintainers:
+  - name: MemeTrader AI Team

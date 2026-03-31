@@ -1,0 +1,94 @@
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+
+image:
+  api:
+    repository: meme-trader-ai-api
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  web:
+    repository: meme-trader-ai-web
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+replicaCount:
+  api: 2
+  web: 2
+  worker: 1
+  dexWorker: 1
+  behavioralWorker: 1
+
+postgres:
+  enabled: true
+  image: postgres:16-alpine
+  storage: 10Gi
+  storageClass: ""
+  database: memetrader
+  username: postgres
+  password: postgres  # Override with a secret in production
+
+redis:
+  enabled: true
+  image: redis:7-alpine
+  storage: 2Gi
+
+env:
+  coingeckoApiKey: ""
+  birdeyeApiKey: ""
+  moralisApiKey: ""
+  bitqueryApiKey: ""
+  alchemyApiKey: ""
+  signalRefreshInterval: "30"
+  coingeckoMaxPages: "4"
+
+ingress:
+  enabled: false
+  className: nginx
+  host: memetrader.local
+  tls: []
+  # - secretName: memetrader-tls
+  #   hosts:
+  #     - memetrader.local
+
+resources:
+  api:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  web:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  worker:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+autoscaling:
+  enabled: false
+  api:
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+
+serviceAccount:
+  create: true
+  name: ""
+
+podAnnotations: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
