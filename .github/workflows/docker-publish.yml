@@ -1,0 +1,161 @@
+name: Build & Publish Docker Images
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*.*.*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  # ghcr.io/<owner>/<repo>-api and ghcr.io/<owner>/<repo>-web
+  API_IMAGE: ghcr.io/${{ github.repository_owner }}/meme-trader-ai-api
+  WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/meme-trader-ai-web
+
+jobs:
+  build-api:
+    name: Build API Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image: ${{ steps.meta.outputs.tags }}
+      digest: ${{ steps.build.outputs.digest }}
+      version: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags & labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.API_IMAGE }}
+          tags: |
+            # latest on default branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            # short git SHA — always
+            type=sha,prefix=sha-,format=short
+            # semver tags: v1.2.3 → 1.2.3, 1.2, 1
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            # branch name on non-default branches (e.g. feature/foo → feature-foo)
+            type=ref,event=branch,enable=${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+            # PR number on pull requests
+            type=ref,event=pr
+
+      - name: Build and push API image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.API_IMAGE }}:cache
+          cache-to: type=registry,ref=${{ env.API_IMAGE }}:cache,mode=max
+          provenance: false
+
+  build-web:
+    name: Build Web Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image: ${{ steps.meta.outputs.tags }}
+      digest: ${{ steps.build.outputs.digest }}
+      version: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags & labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.WEB_IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=branch,enable=${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+            type=ref,event=pr
+
+      - name: Build and push Web image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./web
+          file: ./web/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.WEB_IMAGE }}:cache
+          cache-to: type=registry,ref=${{ env.WEB_IMAGE }}:cache,mode=max
+          provenance: false
+
+  summary:
+    name: Image Summary
+    runs-on: ubuntu-latest
+    needs: [build-api, build-web]
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - name: Write job summary
+        run: |
+          echo "## Docker Images Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Image | Tags |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| \`${{ env.API_IMAGE }}\` | \`${{ needs.build-api.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`${{ env.WEB_IMAGE }}\` | \`${{ needs.build-web.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pull commands" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ${{ env.API_IMAGE }}:${{ needs.build-api.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ${{ env.WEB_IMAGE }}:${{ needs.build-web.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Deploy to Kubernetes with Helm" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "helm upgrade --install meme-trader-ai ./helm/meme-trader-ai \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --set image.api.repository=${{ env.API_IMAGE }} \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --set image.api.tag=${{ needs.build-api.outputs.version }} \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --set image.web.repository=${{ env.WEB_IMAGE }} \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --set image.web.tag=${{ needs.build-web.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
