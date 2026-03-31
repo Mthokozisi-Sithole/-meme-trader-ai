@@ -2,7 +2,7 @@
 
 # ⚡ MemeTrader AI — Intelligence Terminal
 
-### Real-time meme coin trading signals · DEX scanner · Market intelligence
+### Real-time meme coin trading signals · DEX scanner · Behavioral intelligence · Market analytics
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -11,9 +11,11 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://postgresql.org)
 [![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docker.com)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-Helm-326CE5?style=flat-square&logo=kubernetes&logoColor=white)](https://helm.sh)
+[![CI/CD](https://img.shields.io/badge/GitHub_Actions-GHCR-2088FF?style=flat-square&logo=github-actions&logoColor=white)](https://github.com/features/actions)
 [![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
 
-A full-stack, production-ready system that combines CoinGecko fundamental analysis, DexScreener/Pump.fun sniping, narrative classification, and multi-source on-chain data from **10 different providers** into actionable trading signals with precise entry/exit/stop-loss levels, risk management, and a live dark-terminal dashboard.
+A full-stack, production-ready system that combines CoinGecko fundamental analysis, DexScreener/Pump.fun sniping, narrative classification, behavioral pattern detection, wallet intelligence, and multi-source on-chain data from **10 different providers** into actionable trading signals with precise entry/exit/stop-loss levels, risk management, and a live dark-terminal dashboard. Deployable via Docker Compose or Kubernetes/Helm.
 
 </div>
 
@@ -26,11 +28,14 @@ A full-stack, production-ready system that combines CoinGecko fundamental analys
 
 MemeTrader AI is a platform built for people who want to track and analyse meme coin opportunities in real time. It works like this:
 
-1. **Two background workers run every 30 seconds.** One fetches data from CoinGecko (up to 1,000 coins), the other scans DexScreener, Pump.fun, GeckoTerminal, and up to 7 other sources for newly launched DEX tokens.
+1. **Three background workers run continuously.** One fetches data from CoinGecko (up to 1,000 coins), the second scans DexScreener, Pump.fun, GeckoTerminal, and up to 7 other sources for newly launched DEX tokens, and the third detects behavioral patterns and tracks liquidity changes in real time.
 2. **Every token gets scored** using a multi-factor algorithm that considers narrative strength, price momentum, liquidity depth, and risk-adjusted safety.
 3. **Signals are generated** — each one includes a band (Strong Buy / Watch / Risky / Avoid), a composite score (0-100), entry price range, three exit targets, a stop-loss level, and a plain-English reasoning text.
 4. **Risk flags are raised automatically** when dangerous conditions are detected — whale concentration, low liquidity, sudden price spikes, sell-only pressure, suspicious volume, etc.
-5. **Everything streams live to a web dashboard** via WebSocket. No page refresh needed.
+5. **Behavioral patterns are detected** — accumulation, pre-breakout, fake breakout, liquidity traps, wash trading, momentum ignition, and more are classified and stored as active signals.
+6. **Wallet intelligence** classifies addresses into smart money, dev, bot, whale, sniper, dumper, and retail categories with a quality score.
+7. **Liquidity events are tracked** — every significant liquidity change (>5%) is recorded and assessed for rug-pull risk.
+8. **Everything streams live to a web dashboard** via WebSocket. No page refresh needed.
 
 ---
 
@@ -54,6 +59,8 @@ MemeTrader AI is a platform built for people who want to track and analyse meme 
 - [Configuration — All Tunable Settings](#configuration--all-tunable-settings)
 - [Environment Variables](#environment-variables)
 - [Rate Limiting Awareness](#rate-limiting-awareness)
+- [Kubernetes & Helm Deployment](#kubernetes--helm-deployment)
+- [CI/CD — GitHub Actions](#cicd--github-actions)
 - [Project Structure](#project-structure)
 - [License](#-license)
 
@@ -71,8 +78,13 @@ MemeTrader AI is a platform built for people who want to track and analyse meme 
 | 🎯 | **7-Gate Snipe Filter** | Only the best DEX opportunities surface — all 7 criteria must pass simultaneously |
 | 🔁 | **30-Second Cycles** | Both workers scan and score continuously — data is never more than 30 seconds stale |
 | 📱 | **Fully Responsive UI** | Works on desktop, tablet, and mobile — hamburger nav, progressive column hiding |
-| 🐳 | **One-Command Deploy** | `docker compose up --build` — 6 containers, zero manual setup |
+| 🐳 | **One-Command Deploy** | `docker compose up --build` — 7 containers, zero manual setup |
+| ☸️ | **Kubernetes / Helm** | Full Helm chart for K8s deployment — Deployments, StatefulSets, Services, Secrets, ConfigMaps |
+| 🔄 | **CI/CD Pipeline** | GitHub Actions workflow builds and pushes images to GHCR on every push to main |
 | 🔑 | **Zero-Key Operation** | Fully functional with no API keys — Tier 1 & 2 sources are always free |
+| 🧬 | **Behavioral Intelligence** | 9 on-chain pattern types detected: accumulation, wash trading, rug pattern, momentum ignition, and more |
+| 👛 | **Wallet Classification** | Classifies wallets into 8 types (smart money, dev, whale, bot, sniper…) with a 0-100 quality score |
+| 💧 | **Liquidity Tracking** | Real-time liquidity event detection — flags rug patterns, dev removals, and LP lock changes |
 
 ---
 
@@ -102,6 +114,10 @@ MemeTrader AI is a platform built for people who want to track and analyse meme 
 │    GET                 /market/new-pools        ││
 │    GET                 /market/score-dist..     ││
 │    GET                 /market/narrative-perf.. ││
+│    GET/POST            /wallets, /wallets/{addr}││
+│    GET/POST            /behavioral/signals      ││
+│    GET/POST            /behavioral/analyze      ││
+│    GET                 /liquidity/events        ││
 │    GET                 /health                  ││
 │                                                 ││
 │  WebSocket Endpoints:                           ││
@@ -113,6 +129,9 @@ MemeTrader AI is a platform built for people who want to track and analyse meme 
 ┌──────▼──────────────────────────────────────────┐
 │  POSTGRESQL 16  (port 5432)                     │
 │  Tables: coins · signals · alerts · dex_tokens  │
+│    wallets · wallet_transactions                 │
+│    behavioral_signals · liquidity_events         │
+│    holder_snapshots · token_timeseries           │
 └─────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────┐
@@ -140,6 +159,19 @@ MemeTrader AI is a platform built for people who want to track and analyse meme 
 │    5. Mark sniping_opportunity = true/false     │
 │    6. Upsert all tokens to dex_tokens table     │
 └─────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────┐
+│  BEHAVIORAL WORKER  (background process)        │
+│  Every 60s:                                     │
+│    1. Detect liquidity changes (>5%) vs last    │
+│       snapshot → create LiquidityEvent records  │
+│    2. Snapshot OHLCV timeseries for all active  │
+│       tokens into token_timeseries table        │
+│    3. Detect behavioral patterns from candles   │
+│       (accumulation, wash trading, breakout…)   │
+│    4. Persist new BehavioralSignal records      │
+│    5. Deactivate stale signals                  │
+└─────────────────────────────────────────────────┘
 ```
 
 **Backend stack:** Python 3.11 · FastAPI · SQLAlchemy 2.x (async) · Alembic · asyncpg · aiohttp · Pydantic v2 · Redis
@@ -164,7 +196,7 @@ cp .env.example .env
 #    The platform works without any keys — Tier 1 & 2 are free
 #    See "Environment Variables" section below
 
-# 4. Build and start all 6 containers
+# 4. Build and start all 7 containers
 docker compose up --build
 
 # 5. Wait ~60 seconds for the workers to complete their first scan
@@ -175,9 +207,10 @@ open http://localhost:3000
 
 > **What happens on first start:**
 > - `postgres` and `redis` start and pass their health checks
-> - `api` runs `alembic upgrade head` to create all tables, then starts uvicorn
+> - `api` runs `alembic upgrade head` to create all tables (including the 6 new intelligence tables), then starts uvicorn
 > - `worker` starts fetching CoinGecko data immediately
 > - `dex-worker` starts scanning DexScreener, Pump.fun, GeckoTerminal, etc.
+> - `behavioral-worker` starts detecting patterns and liquidity changes every 60 seconds
 > - `web` builds the Next.js app and serves it on port 3000
 > - After ~30-60 seconds, the dashboard will show live data
 
@@ -185,7 +218,7 @@ open http://localhost:3000
 
 ## 🐳 Docker Services
 
-Six containers run together, orchestrated by Docker Compose:
+Seven containers run together, orchestrated by Docker Compose:
 
 ### 🐘 `postgres` — PostgreSQL 16 Alpine
 - **Port:** 5432
@@ -229,6 +262,16 @@ Six containers run together, orchestrated by Docker Compose:
 - Volume-mounted: `./backend:/app`
 - Accepts all optional API keys as environment variables
 
+### 🧬 `behavioral-worker` — Behavioral Intelligence Worker
+- **No exposed port** — background process only
+- **Build context:** `./backend` (same image as `api`)
+- **Command:** `python -m app.worker.behavioral_worker`
+- **Cycle frequency:** Every 60 seconds
+- Detects liquidity changes → snapshots OHLCV timeseries → detects behavioral patterns → persists signals
+- Depends on: `postgres` (healthy)
+- Volume-mounted: `./backend:/app`
+- Restart policy: `restart: always`
+
 ### 🌐 `web` — Next.js Frontend
 - **Port:** 3000
 - **Build context:** `./web`
@@ -236,6 +279,8 @@ Six containers run together, orchestrated by Docker Compose:
 - **Key env var:** `INTERNAL_API_URL=http://api:8000` — used server-side to proxy API calls
 - The browser only ever talks to port 3000. All `/api/*` requests are rewritten to `http://api:8000/*` by Next.js server-side rewrites defined in `next.config.js`
 - Depends on: `api`
+
+> **Note:** All 7 containers are configured with `restart: always` (Docker Compose) — they automatically recover from crashes or system reboots.
 
 ---
 
@@ -331,6 +376,47 @@ Six containers run together, orchestrated by Docker Compose:
 - `run_dex_cycle(db_session)` — Full orchestration cycle
 - `_build_token(raw_data, narrative, score_result)` — Assembles DexTokenCreate schema
 - `_persist_tokens(db, tokens[])` — Batch upsert via repository layer
+- `main()` — Entry point with error handling + sleep loop
+
+---
+
+### 🧬 Worker 3 — Behavioral Intelligence (`backend/app/worker/behavioral_worker.py`)
+
+**Purpose:** Detect on-chain behavioral patterns, track liquidity changes, and maintain a timeseries snapshot database for active tokens.
+
+**Cycle (every 60 seconds):**
+
+```
+1. _detect_liquidity_changes(db)
+   └── For each active token with a prior timeseries snapshot:
+       └── Compare DexToken.liquidity_usd vs last token_timeseries record
+       └── If change > 5% → INSERT into liquidity_events table
+           with change_pct, event_type (add/remove/drain/rug_pattern)
+           and risk assessment (rug_pattern=critical, dev_remove=high…)
+
+2. _snapshot_dex_tokens(db)
+   └── For each active token:
+       └── INSERT into token_timeseries:
+           price_usd, liquidity_usd, volume_5m, buy_pressure_pct,
+           buys_5m, sells_5m, price_change_5m
+
+3. For each active token (batched):
+   └── TimeseriesRepository.get_history(token_address, limit=100) → candles
+   └── detect_patterns(candles) → list[PatternResult]
+       Patterns: accumulation · pre_breakout · fake_breakout ·
+       liquidity_trap · momentum_ignition · volume_anomaly ·
+       wash_trading · breakdown · consolidation
+   └── Deactivate old signals for this token
+   └── BehavioralSignalRepository.create() each new PatternResult
+
+4. Log: "Behavioral cycle complete: N patterns detected"
+5. Sleep 60 seconds → repeat
+```
+
+**Functions exposed:**
+- `_detect_liquidity_changes(db)` — Compares liquidity snapshots, creates events
+- `_snapshot_dex_tokens(db)` — Saves OHLCV timeseries rows
+- `_get_active_tokens(db)` — Raw SQL DISTINCT ON query for one row per token
 - `main()` — Entry point with error handling + sleep loop
 
 ---
@@ -613,6 +699,150 @@ Returns per-narrative category analytics — how each thematic group is performi
   }
 ]
 ```
+
+---
+
+### 👛 Wallets
+
+Wallet tracking and classification. Requires `BIRDEYE_API_KEY` for wallet-level transaction data. Classification endpoints work without a key using provided metrics.
+
+#### `GET /wallets`
+Returns all tracked wallets, sorted by quality score descending.
+
+**Query Parameters:**
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `limit` | int | 50 | Number of wallets to return |
+| `wallet_type` | string | — | Filter by type: `smart_money`, `dev`, `bot`, `whale`, `sniper`, `dumper`, `retail`, `unknown` |
+
+#### `GET /wallets/{address}`
+Get a single wallet by its on-chain address.
+
+**Response:** Wallet object with type, quality score, and classification metadata.
+
+#### `GET /wallets/{address}/transactions`
+Returns recent transactions for a wallet address.
+
+**Query Parameters:**
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `limit` | int | 50 | Number of transactions |
+
+#### `POST /wallets/{address}/classify`
+Trigger on-demand wallet classification. Accepts a `WalletMetrics` body and returns a `ClassificationResult` with wallet type, quality score (0-100), and reasoning.
+
+**Body:**
+```json
+{
+  "win_rate": 0.65,
+  "avg_hold_time_hours": 4.2,
+  "total_trades": 120,
+  "rug_exposure_count": 1,
+  "early_entry_rate": 0.45,
+  "bot_pattern_score": 0.1
+}
+```
+
+**Response:**
+```json
+{
+  "wallet_type": "smart_money",
+  "quality_score": 78,
+  "reasoning": "High win rate, early entry rate above 40%, low rug exposure."
+}
+```
+
+---
+
+### 🧬 Behavioral Signals
+
+Behavioral patterns detected by the behavioral worker from OHLCV timeseries data.
+
+#### `GET /behavioral/signals`
+Returns all active behavioral signals across all tokens.
+
+**Query Parameters:**
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `limit` | int | 50 | Number of signals |
+| `pattern_type` | string | — | Filter by: `accumulation`, `pre_breakout`, `fake_breakout`, `liquidity_trap`, `momentum_ignition`, `volume_anomaly`, `wash_trading`, `breakdown`, `consolidation` |
+| `severity` | string | — | Filter by severity: `low`, `medium`, `high`, `critical` |
+
+**Response example:**
+```json
+[
+  {
+    "id": 1,
+    "token_address": "So11111...",
+    "pattern_type": "accumulation",
+    "severity": "high",
+    "confidence": 82.5,
+    "description": "Steady buy accumulation with rising volume across 20 candles",
+    "is_active": true,
+    "created_at": "2026-03-31T10:00:00Z"
+  }
+]
+```
+
+#### `GET /behavioral/signals/{token_address}`
+Returns all active behavioral signals for a specific token address.
+
+#### `POST /behavioral/analyze/{token_address}`
+Triggers on-demand behavioral analysis for a token. Fetches 100 candles from the timeseries, runs pattern detection, and persists new signals. Returns the list of active signals.
+
+#### `GET /behavioral/summary`
+Returns an aggregate summary of all active behavioral signals.
+
+**Response:**
+```json
+{
+  "total_active": 142,
+  "by_pattern": { "accumulation": 34, "wash_trading": 12, "pre_breakout": 8 },
+  "by_severity": { "low": 51, "medium": 60, "high": 24, "critical": 7 }
+}
+```
+
+---
+
+### 💧 Liquidity Events
+
+Liquidity change events detected by the behavioral worker. Every change >5% in pool liquidity creates an event.
+
+#### `GET /liquidity/events`
+Returns liquidity events. Defaults to all events; use `suspicious_only=true` for high-risk events.
+
+**Query Parameters:**
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `limit` | int | 50 | Number of events |
+| `suspicious_only` | bool | false | Only return `high` or `critical` risk events |
+
+**Response example:**
+```json
+[
+  {
+    "id": 7,
+    "token_address": "7xKXtg...",
+    "event_type": "rug_pattern",
+    "liquidity_before": 285000,
+    "liquidity_after": 4200,
+    "change_pct": -98.5,
+    "risk_level": "critical",
+    "risk_score": 95,
+    "timestamp": "2026-03-31T09:45:00Z"
+  }
+]
+```
+
+**Event types:** `add` · `remove` · `drain` · `rug_pattern`
+
+**Risk levels:** `low` · `medium` · `high` · `critical`
+
+#### `GET /liquidity/suspicious`
+Shorthand for high and critical risk events only.
+
+#### `GET /liquidity/events/{token_address}`
+Returns all liquidity events for a specific token address, most recent first.
 
 ---
 
@@ -1309,6 +1539,101 @@ The largest and most complex table. Stores every DEX token discovered by the DEX
 
 **Unique constraint:** `(chain, token_address)` — one row per token per chain. Workers use `INSERT ... ON CONFLICT DO UPDATE`.
 
+### 🕐 `token_timeseries` Table
+
+OHLCV snapshots for every active DEX token. Written every 60 seconds by the behavioral worker.
+
+| Column | SQLAlchemy Type | Description |
+|---|---|---|
+| `id` | Integer PK | Internal ID |
+| `token_address` | Text | On-chain token address |
+| `timestamp` | DateTime | Snapshot timestamp (UTC) |
+| `price_usd` | Float | Price at snapshot time |
+| `liquidity_usd` | Float | Pool liquidity at snapshot time |
+| `volume_5m` | Float | 5-minute volume in USD |
+| `buy_pressure_pct` | Float | Buy % of 5-minute transactions (0-100) |
+| `buys_5m` | Integer | Buy transaction count (5m) |
+| `sells_5m` | Integer | Sell transaction count (5m) |
+| `price_change_5m` | Float | % price change in last 5 minutes |
+
+### 🧬 `behavioral_signals` Table
+
+Active on-chain behavioral pattern signals detected by the behavioral worker.
+
+| Column | SQLAlchemy Type | Description |
+|---|---|---|
+| `id` | Integer PK | Internal ID |
+| `token_address` | Text | Token this signal applies to |
+| `pattern_type` | Text | One of 9 pattern types (see below) |
+| `severity` | Text | `low` / `medium` / `high` / `critical` |
+| `confidence` | Float | Confidence score 0-100 |
+| `description` | Text | Human-readable pattern explanation |
+| `is_active` | Boolean | Whether this signal is still valid |
+| `created_at` | DateTime | When the pattern was first detected |
+| `updated_at` | DateTime | Last update timestamp |
+
+**Pattern types:** `accumulation` · `pre_breakout` · `fake_breakout` · `liquidity_trap` · `momentum_ignition` · `volume_anomaly` · `wash_trading` · `breakdown` · `consolidation`
+
+### 💧 `liquidity_events` Table
+
+Records every significant liquidity change (>5%) detected for a DEX token.
+
+| Column | SQLAlchemy Type | Description |
+|---|---|---|
+| `id` | Integer PK | Internal ID |
+| `token_address` | Text | Token address |
+| `event_type` | Text | `add` / `remove` / `drain` / `rug_pattern` |
+| `liquidity_before` | Float | Pool liquidity before the change (USD) |
+| `liquidity_after` | Float | Pool liquidity after the change (USD) |
+| `change_pct` | Float | Percentage change (negative = removal) |
+| `risk_level` | Text | `low` / `medium` / `high` / `critical` |
+| `risk_score` | Float | Risk score 0-100 (100 = certain rug) |
+| `timestamp` | DateTime | When the change was detected |
+
+### 👛 `wallets` Table
+
+Classified wallet profiles tracked by the platform.
+
+| Column | SQLAlchemy Type | Description |
+|---|---|---|
+| `id` | Integer PK | Internal ID |
+| `address` | Text | On-chain wallet address (unique) |
+| `wallet_type` | Text | `smart_money` / `dev` / `bot` / `whale` / `sniper` / `dumper` / `retail` / `unknown` |
+| `quality_score` | Float | Wallet quality score 0-100 |
+| `win_rate` | Float | Historical win rate 0-1 |
+| `avg_hold_time_hours` | Float | Average position hold time in hours |
+| `total_trades` | Integer | Total trade count |
+| `rug_exposure_count` | Integer | Number of rug pulls this wallet was in |
+| `early_entry_rate` | Float | Rate of early-entry trades (0-1) |
+| `created_at` | DateTime | When first tracked |
+| `updated_at` | DateTime | Last classification update |
+
+### 📋 `wallet_transactions` Table
+
+Individual transactions for tracked wallets.
+
+| Column | SQLAlchemy Type | Description |
+|---|---|---|
+| `id` | Integer PK | Internal ID |
+| `wallet_address` | Text | FK → wallets.address |
+| `token_address` | Text | Token traded |
+| `tx_hash` | Text | On-chain transaction signature/hash |
+| `tx_type` | Text | `buy` / `sell` |
+| `amount_usd` | Float | Transaction value in USD |
+| `timestamp` | DateTime | Transaction timestamp |
+
+### 📸 `holder_snapshots` Table
+
+Point-in-time holder count and distribution snapshots.
+
+| Column | SQLAlchemy Type | Description |
+|---|---|---|
+| `id` | Integer PK | Internal ID |
+| `token_address` | Text | Token address |
+| `holder_count` | Integer | Total unique holder count |
+| `top10_pct` | Float | % of supply held by top 10 wallets |
+| `timestamp` | DateTime | Snapshot timestamp |
+
 ---
 
 ## ⚡ WebSocket Streams
@@ -1587,6 +1912,42 @@ Individual coin deep-dive page.
 - Risk breakdown: which flags have been triggered historically
 - Score trends over time
 
+### `/wallets` — Wallet Intelligence
+
+Tracked wallet profiles and classifications.
+
+**What's on this page:**
+- Table of all tracked wallets: address, wallet type badge, quality score, win rate, total trades, hold time
+- Quality score colored by tier: green ≥70, yellow ≥50, orange ≥30, red <30
+- Wallet type badges color-coded: smart_money=green, dev=blue, whale=purple, bot=orange, sniper=yellow, dumper=red, retail=grey
+- Empty state with informational message: explains that `BIRDEYE_API_KEY` is required for wallet-level tracking, with guidance on how to enable it
+- SWR refresh every 60 seconds
+
+> **Note:** Wallet data populates when `BIRDEYE_API_KEY` is configured. Without it, the page shows an informative empty state rather than an error.
+
+### `/behavioral` — Behavioral Patterns
+
+Active on-chain behavioral pattern signals detected by the behavioral worker.
+
+**What's on this page:**
+- **Summary stats row:** Total active signals · Signals by severity (Critical, High, Medium, Low counts)
+- **Pattern filter tabs:** All / Accumulation / Pre-Breakout / Fake Breakout / Liquidity Trap / Momentum Ignition / Wash Trading / Breakdown / Consolidation
+- **Signal table columns:** Token address · Pattern type badge · Severity badge (color-coded) · Confidence % bar · Description · Detected time
+- **Severity color coding:** critical=red · high=orange · medium=yellow · low=blue
+- SWR refresh every 30 seconds
+
+### `/liquidity` — Liquidity Events
+
+Real-time liquidity change monitoring.
+
+**What's on this page:**
+- **Filter tabs:** All Events / Suspicious Only (high + critical risk)
+- **Event table columns:** Token address · Event type · Liquidity Before → After · Change % (green=add, red=remove) · Risk Level badge · Dev Wallet indicator · Status · Time
+- **Risk level color coding:** critical=bright red · high=orange · medium=yellow · low=green
+- Rug patterns highlighted with a distinct critical badge
+- SWR refresh every 15 seconds
+- Empty state: "No events found — liquidity events are generated automatically once DEX tokens have been tracked for at least one cycle."
+
 ---
 
 ## 🧩 Frontend Components
@@ -1777,6 +2138,195 @@ If you add API keys for Tier 3 pipelines, the workers automatically start using 
 
 ---
 
+## ☸️ Kubernetes & Helm Deployment
+
+The platform ships with a full Helm chart for production Kubernetes deployments.
+
+### Prerequisites
+
+- Kubernetes cluster (local: `minikube`, `k3d`, or `kind`; cloud: EKS, GKE, AKS)
+- `helm` CLI installed
+- `kubectl` configured against your cluster
+
+### Chart Structure
+
+```
+helm/meme-trader-ai/
+├── Chart.yaml                      # Chart metadata and version
+├── values.yaml                     # Default values (override per environment)
+└── templates/
+    ├── _helpers.tpl                # Named template helpers
+    ├── configmap.yaml              # Non-secret environment variables
+    ├── secret.yaml                 # Database URL, Redis URL, API keys
+    ├── serviceaccount.yaml         # Kubernetes ServiceAccount
+    ├── api/
+    │   ├── deployment.yaml         # FastAPI Deployment (readiness + liveness probes)
+    │   └── service.yaml            # ClusterIP Service on port 8000
+    ├── web/
+    │   ├── deployment.yaml         # Next.js Deployment
+    │   └── service.yaml            # ClusterIP/LoadBalancer on port 3000
+    ├── worker/
+    │   └── deployment.yaml         # Signal generation worker Deployment
+    ├── dex-worker/
+    │   └── deployment.yaml         # DEX token sniping worker Deployment
+    ├── behavioral-worker/
+    │   └── deployment.yaml         # Behavioral intelligence worker Deployment
+    ├── postgres/
+    │   ├── statefulset.yaml        # PostgreSQL StatefulSet with PVC
+    │   └── service.yaml            # Headless Service
+    └── redis/
+        ├── statefulset.yaml        # Redis StatefulSet
+        └── service.yaml            # ClusterIP Service
+```
+
+### Default Image Configuration (`values.yaml`)
+
+```yaml
+image:
+  api:
+    repository: ghcr.io/mthokozisi-sithole/meme-trader-ai-api
+    tag: "latest"
+    pullPolicy: Always
+  web:
+    repository: ghcr.io/mthokozisi-sithole/meme-trader-ai-web
+    tag: "latest"
+    pullPolicy: Always
+```
+
+> Worker containers (`worker`, `dex-worker`, `behavioral-worker`) share the same `api` image — they run different `command` entrypoints.
+
+### Deploying with the Makefile
+
+A `Makefile` is included with common Helm + kubectl operations:
+
+```bash
+# Validate and lint the chart
+make helm-lint
+
+# Preview what will be deployed (dry run)
+make helm-dry-run
+
+# Create namespace if it doesn't exist
+make k8s-create-ns
+
+# Full deploy (installs or upgrades)
+make k8s-deploy
+
+# Upgrade an existing release
+make k8s-upgrade
+
+# Check pod and service status
+make k8s-status
+
+# Tail API container logs
+make k8s-logs-api
+
+# Tail behavioral worker logs
+make k8s-logs-worker
+
+# Tear down the release
+make k8s-delete
+```
+
+### Key Kubernetes Features
+
+- **Init containers:** The API pod uses a `busybox` init container that waits for PostgreSQL to become ready (`nc -z postgres 5432`) before starting uvicorn
+- **Health probes:** API Deployment has `readinessProbe` (10s delay, 5s period) and `livenessProbe` (30s delay, 10s period) on `GET /health`
+- **Restart policy:** All Deployments and StatefulSets have `restartPolicy: Always`
+- **Image pull secrets:** Configurable via `global.imagePullSecrets` in values
+- **Resource limits:** Configurable per service via `resources.api`, `resources.web`, etc. in values
+
+### Secrets Setup
+
+Before deploying, create a Kubernetes Secret with your credentials:
+
+```bash
+kubectl create secret generic meme-trader-ai-secrets \
+  --namespace meme-trader \
+  --from-literal=DATABASE_URL="postgresql+asyncpg://postgres:postgres@meme-trader-ai-postgres:5432/memetrader" \
+  --from-literal=REDIS_URL="redis://meme-trader-ai-redis:6379/0" \
+  --from-literal=BIRDEYE_API_KEY="" \
+  --from-literal=MORALIS_API_KEY="" \
+  --from-literal=BITQUERY_API_KEY="" \
+  --from-literal=ALCHEMY_API_KEY=""
+```
+
+Or override in your own `values.yaml`:
+
+```yaml
+secrets:
+  databaseUrl: "postgresql+asyncpg://..."
+  redisUrl: "redis://..."
+```
+
+---
+
+## 🔄 CI/CD — GitHub Actions
+
+A GitHub Actions workflow automatically builds and publishes Docker images to the **GitHub Container Registry (GHCR)** on every push.
+
+### Workflow File
+
+`.github/workflows/docker-publish.yml`
+
+### Triggers
+
+| Event | Action |
+|---|---|
+| Push to `main` | Build + push `latest` tag and `sha-<short>` tag |
+| Push a `v*.*.*` tag | Build + push semantic version tags (`v1.2.3`, `1.2`, `1`) |
+| Pull request to `main` | Build only (no push) — validates the build is not broken |
+| Manual (`workflow_dispatch`) | Build + push on demand |
+
+### Images Published
+
+| Image | Registry Path |
+|---|---|
+| FastAPI backend | `ghcr.io/mthokozisi-sithole/meme-trader-ai-api` |
+| Next.js frontend | `ghcr.io/mthokozisi-sithole/meme-trader-ai-web` |
+
+> Image names are **always lowercase** — the workflow uses `${GITHUB_REPOSITORY_OWNER,,}` bash expansion to lowercase the owner name, which is required by the Docker registry format.
+
+### Tags Published
+
+For a push to `main` with commit `abc1234`:
+- `ghcr.io/mthokozisi-sithole/meme-trader-ai-api:latest`
+- `ghcr.io/mthokozisi-sithole/meme-trader-ai-api:sha-abc1234`
+- `ghcr.io/mthokozisi-sithole/meme-trader-ai-api:main`
+
+For a `v1.2.3` tag push:
+- `ghcr.io/mthokozisi-sithole/meme-trader-ai-api:v1.2.3`
+- `ghcr.io/mthokozisi-sithole/meme-trader-ai-api:1.2`
+- `ghcr.io/mthokozisi-sithole/meme-trader-ai-api:1`
+- `ghcr.io/mthokozisi-sithole/meme-trader-ai-api:latest`
+
+### Authentication
+
+The workflow uses `GITHUB_TOKEN` (automatically available in all Actions runs) — **no additional secrets are required**.
+
+### Layer Caching
+
+Build cache is stored in the registry itself using `type=registry,mode=max`:
+```yaml
+cache-from: type=registry,ref=ghcr.io/mthokozisi-sithole/meme-trader-ai-api:cache
+cache-to: type=registry,ref=ghcr.io/mthokozisi-sithole/meme-trader-ai-api:cache,mode=max
+```
+
+This dramatically speeds up subsequent builds by reusing unchanged layers.
+
+### Using the Published Images
+
+To deploy from GHCR in your own cluster, the images are public. You can pull directly:
+
+```bash
+docker pull ghcr.io/mthokozisi-sithole/meme-trader-ai-api:latest
+docker pull ghcr.io/mthokozisi-sithole/meme-trader-ai-web:latest
+```
+
+Or deploy using the Helm chart which already points to these images by default.
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -1793,7 +2343,12 @@ meme-trader-ai/
 │   │   │   ├── coin.py            # Coin model (coins table)
 │   │   │   ├── signal.py          # Signal model (signals table)
 │   │   │   ├── alert.py           # Alert model (alerts table)
-│   │   │   └── dex_token.py       # DexToken model (dex_tokens table)
+│   │   │   ├── dex_token.py       # DexToken model (dex_tokens table)
+│   │   │   ├── wallet.py          # Wallet + WalletTransaction models
+│   │   │   ├── behavioral_signal.py # BehavioralSignal model
+│   │   │   ├── liquidity_event.py # LiquidityEvent model
+│   │   │   ├── holder_snapshot.py # HolderSnapshot model
+│   │   │   └── token_timeseries.py # TokenTimeseries model
 │   │   │
 │   │   ├── schemas/               # Pydantic request/response schemas
 │   │   │   ├── coin.py            # CoinCreate, CoinOut, CoinUpdate
@@ -1805,14 +2360,23 @@ meme-trader-ai/
 │   │   │   ├── coin_repo.py       # Coin upsert, search, get
 │   │   │   ├── signal_repo.py     # Signal insert, list by coin
 │   │   │   ├── alert_repo.py      # Alert create, mark read
-│   │   │   └── dex_token_repo.py  # DexToken upsert, filter, rank
+│   │   │   ├── dex_token_repo.py  # DexToken upsert, filter, rank
+│   │   │   ├── wallet_repo.py     # Wallet + transaction CRUD
+│   │   │   ├── behavioral_repo.py # BehavioralSignal create, deactivate
+│   │   │   ├── liquidity_repo.py  # LiquidityEvent create, get_all, suspicious
+│   │   │   └── timeseries_repo.py # TokenTimeseries insert, get_history, get_latest
 │   │   │
 │   │   ├── services/              # Business logic
 │   │   │   ├── scoring.py         # Composite score formula (sentiment+technical+liquidity+momentum)
 │   │   │   ├── risk.py            # Risk flag detection + SL calculation
 │   │   │   ├── signal_service.py  # Orchestrates scoring+risk → full signal with trade levels
 │   │   │   ├── snipe_scorer.py    # DEX token composite score + trade level generation
-│   │   │   └── narrative_engine.py # Keyword-based category classification + hype velocity
+│   │   │   ├── narrative_engine.py # Keyword-based category classification + hype velocity
+│   │   │   ├── wallet_classifier.py # WalletMetrics → ClassificationResult (8 wallet types)
+│   │   │   ├── pattern_detector.py  # detect_patterns(candles) → list[PatternResult] (9 patterns)
+│   │   │   ├── behavioral_engine.py # Orchestrates timeseries fetch → pattern detect → persist
+│   │   │   ├── signal_fusion.py     # compute_fusion(FusionInput, weights) → FusionResult
+│   │   │   └── liquidity_tracker.py # assess_liquidity_event() → LiquidityRiskResult
 │   │   │
 │   │   ├── routes/                # FastAPI route handlers
 │   │   │   ├── health.py          # GET /health
@@ -1821,12 +2385,16 @@ meme-trader-ai/
 │   │   │   ├── alerts.py          # GET /alerts, PATCH /alerts/{id}/read
 │   │   │   ├── snipes.py          # GET /snipes, GET /snipes/tokens
 │   │   │   ├── market.py          # GET /market/stats|trending|new-pools|score-dist|narrative-perf
+│   │   │   ├── wallets.py         # GET /wallets, GET /wallets/{addr}/transactions, POST /classify
+│   │   │   ├── behavioral.py      # GET/POST /behavioral/signals, POST /analyze, GET /summary
+│   │   │   ├── liquidity.py       # GET /liquidity/events, /suspicious, /events/{addr}
 │   │   │   └── ws.py              # WS /ws/signals, /ws/snipes, /ws/ticker
 │   │   │
 │   │   ├── worker/
-│   │   │   ├── tasks.py           # CoinGecko signal generation loop (entry: python -m app.worker.tasks)
-│   │   │   ├── dex_tasks.py       # DEX sniping loop (entry: python -m app.worker.dex_tasks)
-│   │   │   └── pipelines/         # Per-source data pipeline modules
+│   │   │   ├── tasks.py              # CoinGecko signal generation loop
+│   │   │   ├── dex_tasks.py          # DEX sniping loop
+│   │   │   ├── behavioral_worker.py  # Behavioral intelligence loop (60s cycle)
+│   │   │   └── pipelines/            # Per-source data pipeline modules
 │   │   │       ├── dexscreener.py     # DexScreener new pairs + boosted tokens
 │   │   │       ├── pumpfun.py         # Pump.fun new + trending coins
 │   │   │       ├── geckoterminal.py   # GeckoTerminal pools (free)
@@ -1841,6 +2409,10 @@ meme-trader-ai/
 │   │
 │   ├── alembic/
 │   │   ├── versions/              # Migration files (auto-applied on startup)
+│   │   │   ├── 0001_initial.py    # coins, signals, alerts tables
+│   │   │   ├── 0002_dex_tokens.py # dex_tokens table
+│   │   │   ├── 0003_...py         # earlier migrations
+│   │   │   └── 0004_add_intelligence_tables.py  # 6 new intelligence tables
 │   │   └── alembic.ini
 │   │
 │   ├── requirements.txt           # Python dependencies
@@ -1861,8 +2433,14 @@ meme-trader-ai/
 │   │   │   ├── page.tsx           # /coins — CoinGecko coins list
 │   │   │   └── [symbol]/
 │   │   │       └── page.tsx       # /coins/[symbol] — Coin detail
-│   │   └── alerts/
-│   │       └── page.tsx           # /alerts — Risk alerts
+│   │   ├── alerts/
+│   │   │   └── page.tsx           # /alerts — Risk alerts
+│   │   ├── wallets/
+│   │   │   └── page.tsx           # /wallets — Wallet intelligence
+│   │   ├── behavioral/
+│   │   │   └── page.tsx           # /behavioral — Behavioral pattern signals
+│   │   └── liquidity/
+│   │       └── page.tsx           # /liquidity — Liquidity event monitoring
 │   │
 │   ├── components/                # Reusable React components
 │   │   ├── Nav.tsx                # Navigation bar (hamburger + desktop)
@@ -1882,14 +2460,22 @@ meme-trader-ai/
 │   │   └── presets.ts             # Filter preset definitions (PRESETS array + computeMetrics)
 │   │
 │   ├── types/
-│   │   └── index.ts               # TypeScript types (Coin, Signal, Alert, DexToken)
+│   │   └── index.ts               # TypeScript types (Coin, Signal, Alert, DexToken,
+│   │                              #   Wallet, WalletTransaction, BehavioralSignal,
+│   │                              #   LiquidityEvent, BehavioralSummary)
 │   │
 │   ├── next.config.js             # Proxy rewrites: /api/* → http://api:8000/*
 │   ├── tailwind.config.ts         # Tailwind configuration
 │   ├── tsconfig.json              # TypeScript config
 │   └── Dockerfile                 # Node 20 Alpine multi-stage build
 │
-├── docker-compose.yml             # All 6 services: postgres, redis, api, worker, dex-worker, web
+├── docker-compose.yml             # All 7 services (restart: always on all)
+├── Makefile                       # Helm and kubectl shortcuts (helm-lint, k8s-deploy, etc.)
+├── helm/
+│   └── meme-trader-ai/
+│       ├── Chart.yaml             # Chart metadata
+│       ├── values.yaml            # Default values (GHCR image refs)
+│       └── templates/             # Kubernetes manifests (Deployments, StatefulSets, Services, etc.)
 ├── .env.example                   # Template environment file
 ├── .claude/                       # Claude project rules and agent definitions
 │   ├── rules/                     # Architecture, trading logic, code style, risk management rules
@@ -1898,7 +2484,8 @@ meme-trader-ai/
 │   └── commands/                  # Custom commands (deploy, generate-signals, analyze-market, build-system)
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                 # GitHub Actions CI pipeline
+│       ├── ci.yml                 # GitHub Actions CI pipeline
+│       └── docker-publish.yml     # Build + push API and web images to GHCR
 └── README.md
 ```
 
