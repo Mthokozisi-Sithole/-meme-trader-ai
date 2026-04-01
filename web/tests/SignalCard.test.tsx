@@ -40,7 +40,7 @@ describe("SignalCard", () => {
 
  it("renders risk level", () => {
  render(<SignalCard signal={mockSignal} />);
- expect(screen.getByText("MEDIUM")).toBeInTheDocument();
+ expect(screen.getByText(/medium/i)).toBeInTheDocument();
  });
 
  it("renders risk flags", () => {

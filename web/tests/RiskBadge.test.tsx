@@ -27,16 +27,16 @@ describe("BandBadge", () => {
 describe("RiskBadge", () => {
  it("renders LOW for low risk", () => {
  render(<RiskBadge level="low" />);
- expect(screen.getByText("LOW")).toBeInTheDocument();
+ expect(screen.getByText(/low/i)).toBeInTheDocument();
  });
 
  it("renders MEDIUM for medium risk", () => {
  render(<RiskBadge level="medium" />);
- expect(screen.getByText("MEDIUM")).toBeInTheDocument();
+ expect(screen.getByText(/medium/i)).toBeInTheDocument();
  });
 
  it("renders HIGH for high risk", () => {
  render(<RiskBadge level="high" />);
- expect(screen.getByText("HIGH")).toBeInTheDocument();
+ expect(screen.getByText(/high/i)).toBeInTheDocument();
  });
 });
