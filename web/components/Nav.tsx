@@ -16,6 +16,7 @@ const LINKS = [
   { href: "/wallets", label: "Wallets" },
   { href: "/behavioral", label: "Behavioral" },
   { href: "/liquidity", label: "Liquidity" },
+  { href: "/lln", label: "LLN" },
   { href: "/coins", label: "Coins" },
   { href: "/alerts", label: "Alerts" },
 ];

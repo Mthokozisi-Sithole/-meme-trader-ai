@@ -8,6 +8,15 @@ from .behavioral_signal import BehavioralSignal
 from .liquidity_event import LiquidityEvent
 from .holder_snapshot import HolderSnapshot
 from .token_timeseries import TokenTimeseries
+from .lln import (
+    SignalOutcome,
+    PatternPerformance,
+    ReturnDistribution,
+    StrategyPerformance,
+    RegimeStat,
+    SimulationResult,
+    FeatureImportance,
+)
 
 __all__ = [
     "Coin",
@@ -20,4 +29,11 @@ __all__ = [
     "LiquidityEvent",
     "HolderSnapshot",
     "TokenTimeseries",
+    "SignalOutcome",
+    "PatternPerformance",
+    "ReturnDistribution",
+    "StrategyPerformance",
+    "RegimeStat",
+    "SimulationResult",
+    "FeatureImportance",
 ]

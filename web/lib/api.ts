@@ -1,4 +1,9 @@
-import type { Coin, Signal, Alert, DexToken, Wallet, WalletTransaction, BehavioralSignal, BehavioralSummary, LiquidityEvent } from "@/types";
+import type {
+  Coin, Signal, Alert, DexToken, Wallet, WalletTransaction,
+  BehavioralSignal, BehavioralSummary, LiquidityEvent,
+  LLNOverview, PatternPerformance, ReturnDistribution, StrategyPerformance,
+  SignalOutcome, SimulationResult, RegimeStat, FeatureImportance, RiskSummary,
+} from "@/types";
 
 // All API calls go through the Next.js proxy (/api/*) so the browser
 // only ever needs to reach port 3000 — no direct access to port 8000 needed.
@@ -153,5 +158,33 @@ export const api = {
     },
     suspicious: () => apiFetch<LiquidityEvent[]>("/liquidity/suspicious"),
     tokenEvents: (tokenAddress: string) => apiFetch<LiquidityEvent[]>(`/liquidity/events/${tokenAddress}`),
+  },
+  lln: {
+    overview: () => apiFetch<LLNOverview>("/analytics/overview"),
+    patterns: (params?: { group_by?: string; min_sample?: number }) => {
+      const q = new URLSearchParams();
+      if (params?.group_by) q.set("group_by", params.group_by);
+      if (params?.min_sample != null) q.set("min_sample", String(params.min_sample));
+      const qs = q.toString();
+      return apiFetch<PatternPerformance[]>(`/analytics/patterns${qs ? `?${qs}` : ""}`);
+    },
+    strategies: () => apiFetch<StrategyPerformance[]>("/analytics/strategies"),
+    outcomes: (params?: { limit?: number; outcome?: string; band?: string; narrative?: string }) => {
+      const q = new URLSearchParams();
+      if (params?.limit != null) q.set("limit", String(params.limit));
+      if (params?.outcome) q.set("outcome", params.outcome);
+      if (params?.band) q.set("band", params.band);
+      if (params?.narrative) q.set("narrative", params.narrative);
+      const qs = q.toString();
+      return apiFetch<SignalOutcome[]>(`/analytics/outcomes${qs ? `?${qs}` : ""}`);
+    },
+    distributions: (group_by?: string) => {
+      const qs = group_by ? `?group_by=${group_by}` : "";
+      return apiFetch<ReturnDistribution[]>(`/analytics/distributions${qs}`);
+    },
+    risk: () => apiFetch<RiskSummary>("/analytics/risk"),
+    simulations: () => apiFetch<SimulationResult[]>("/analytics/simulations"),
+    regimes: () => apiFetch<RegimeStat[]>("/analytics/regimes"),
+    features: () => apiFetch<FeatureImportance[]>("/analytics/features"),
   },
 };

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "meme-trader-ai.fullname" . }}-lln-worker
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "meme-trader-ai.labels" . | nindent 4 }}
+    app.kubernetes.io/component: lln-worker
+spec:
+  replicas: {{ .Values.replicaCount.llnWorker }}
+  selector:
+    matchLabels:
+      {{- include "meme-trader-ai.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: lln-worker
+  template:
+    metadata:
+      labels:
+        {{- include "meme-trader-ai.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: lln-worker
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: Always
+      serviceAccountName: {{ include "meme-trader-ai.serviceAccountName" . }}
+      containers:
+        - name: lln-worker
+          image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}"
+          imagePullPolicy: {{ .Values.image.api.pullPolicy }}
+          command:
+            - python
+            - -m
+            - app.worker.lln_quant_worker
+          envFrom:
+            - secretRef:
+                name: {{ include "meme-trader-ai.fullname" . }}-secrets
+            - configMapRef:
+                name: {{ include "meme-trader-ai.fullname" . }}-config
+          resources:
+            {{- toYaml .Values.resources.llnWorker | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

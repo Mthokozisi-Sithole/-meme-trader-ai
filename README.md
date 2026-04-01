@@ -2,7 +2,7 @@
 
 # ⚡ MemeTrader AI — Intelligence Terminal
 
-### Real-time meme coin trading signals · DEX scanner · Behavioral intelligence · Market analytics
+### Real-time meme coin trading signals · DEX scanner · Behavioral intelligence · LLN Quant Engine · Market analytics
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -15,7 +15,7 @@
 [![CI/CD](https://img.shields.io/badge/GitHub_Actions-GHCR-2088FF?style=flat-square&logo=github-actions&logoColor=white)](https://github.com/features/actions)
 [![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
 
-A full-stack, production-ready system that combines CoinGecko fundamental analysis, DexScreener/Pump.fun sniping, narrative classification, behavioral pattern detection, wallet intelligence, and multi-source on-chain data from **10 different providers** into actionable trading signals with precise entry/exit/stop-loss levels, risk management, and a live dark-terminal dashboard. Deployable via Docker Compose or Kubernetes/Helm.
+A full-stack, production-ready system that combines CoinGecko fundamental analysis, DexScreener/Pump.fun sniping, narrative classification, behavioral pattern detection, wallet intelligence, and multi-source on-chain data from **10 different providers** into actionable trading signals with precise entry/exit/stop-loss levels, risk management, and a live dark-terminal dashboard. A **Law of Large Numbers (LLN) Quant Engine** runs as a sidecar worker — computing Monte Carlo simulations, Bayesian win-rate estimates, Expected Value, Sharpe/Sortino ratios, and regime detection over accumulated signal outcomes. Deployable via Docker Compose or Kubernetes/Helm.
 
 </div>
 
@@ -36,6 +36,7 @@ MemeTrader AI is a platform built for people who want to track and analyse meme 
 6. **Wallet intelligence** classifies addresses into smart money, dev, bot, whale, sniper, dumper, and retail categories with a quality score.
 7. **Liquidity events are tracked** — every significant liquidity change (>5%) is recorded and assessed for rug-pull risk.
 8. **Everything streams live to a web dashboard** via WebSocket. No page refresh needed.
+9. **The LLN Quant Engine runs in the background** — every 60 seconds it analyses accumulated signal outcomes, computes Expected Value, Sharpe/Sortino ratios, Monte Carlo survival probabilities, Bayesian confidence intervals, regime detection, and feature importance. Results surface in the **/lln** section of the dashboard.
 
 ---
 
@@ -46,6 +47,7 @@ MemeTrader AI is a platform built for people who want to track and analyse meme 
 - [Docker Services](#docker-services)
 - [Background Workers](#background-workers)
 - [Backend API — All Endpoints](#backend-api--all-endpoints)
+- [LLN Quant Engine — Analytics API](#lln-quant-engine--analytics-api)
 - [Scoring Logic — How Signals Are Calculated](#scoring-logic--how-signals-are-calculated)
 - [Risk Management — Flags, Penalties, Stop-Loss](#risk-management--flags-penalties-stop-loss)
 - [Narrative Engine — Category Classification](#narrative-engine--category-classification)
@@ -85,6 +87,7 @@ MemeTrader AI is a platform built for people who want to track and analyse meme 
 | 🧬 | **Behavioral Intelligence** | 9 on-chain pattern types detected: accumulation, wash trading, rug pattern, momentum ignition, and more |
 | 👛 | **Wallet Classification** | Classifies wallets into 8 types (smart money, dev, whale, bot, sniper…) with a 0-100 quality score |
 | 💧 | **Liquidity Tracking** | Real-time liquidity event detection — flags rug patterns, dev removals, and LP lock changes |
+| 📐 | **LLN Quant Engine** | Law of Large Numbers sidecar — Monte Carlo simulations, Bayesian win-rate, EV, Sharpe, Sortino, regime detection, feature importance |
 
 ---
 
@@ -118,6 +121,15 @@ MemeTrader AI is a platform built for people who want to track and analyse meme 
 │    GET/POST            /behavioral/signals      ││
 │    GET/POST            /behavioral/analyze      ││
 │    GET                 /liquidity/events        ││
+│    GET                 /analytics/overview      ││
+│    GET                 /analytics/patterns      ││
+│    GET                 /analytics/strategies    ││
+│    GET                 /analytics/outcomes      ││
+│    GET                 /analytics/distributions ││
+│    GET                 /analytics/risk          ││
+│    GET                 /analytics/simulations   ││
+│    GET                 /analytics/regimes       ││
+│    GET                 /analytics/features      ││
 │    GET                 /health                  ││
 │                                                 ││
 │  WebSocket Endpoints:                           ││
@@ -132,6 +144,11 @@ MemeTrader AI is a platform built for people who want to track and analyse meme 
 │    wallets · wallet_transactions                 │
 │    behavioral_signals · liquidity_events         │
 │    holder_snapshots · token_timeseries           │
+│  LLN Tables (migration 0005):                   │
+│    signal_outcomes · pattern_performance         │
+│    return_distributions · strategy_performance   │
+│    regime_stats · simulation_results             │
+│    feature_importance                            │
 └─────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────┐
@@ -172,6 +189,20 @@ MemeTrader AI is a platform built for people who want to track and analyse meme 
 │    4. Persist new BehavioralSignal records      │
 │    5. Deactivate stale signals                  │
 └─────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────┐
+│  LLN QUANT WORKER  (background process)         │
+│  Every 60s (sidecar — reads existing tables,    │
+│  writes only to new analytics tables):          │
+│    1. Compute signal outcomes (ROI, MFE, MAE,   │
+│       WIN/NEUTRAL/LOSS classification)          │
+│    2. Compute pattern performance by band /     │
+│       narrative / risk / liquidity tier         │
+│    3. Compute strategy performance (7 combos)   │
+│    4. Run Monte Carlo simulations (1000 sims)   │
+│    5. Detect & store current market regime      │
+│    6. Compute feature importance (Pearson r)    │
+└─────────────────────────────────────────────────┘
 ```
 
 **Backend stack:** Python 3.11 · FastAPI · SQLAlchemy 2.x (async) · Alembic · asyncpg · aiohttp · Pydantic v2 · Redis
@@ -196,7 +227,7 @@ cp .env.example .env
 #    The platform works without any keys — Tier 1 & 2 are free
 #    See "Environment Variables" section below
 
-# 4. Build and start all 7 containers
+# 4. Build and start all 8 containers
 docker compose up --build
 
 # 5. Wait ~60 seconds for the workers to complete their first scan
@@ -207,18 +238,19 @@ open http://localhost:3000
 
 > **What happens on first start:**
 > - `postgres` and `redis` start and pass their health checks
-> - `api` runs `alembic upgrade head` to create all tables (including the 6 new intelligence tables), then starts uvicorn
+> - `api` runs `alembic upgrade head` to create all tables (including the 6 intelligence tables + 7 LLN analytics tables from migration `0005`), then starts uvicorn
 > - `worker` starts fetching CoinGecko data immediately
 > - `dex-worker` starts scanning DexScreener, Pump.fun, GeckoTerminal, etc.
 > - `behavioral-worker` starts detecting patterns and liquidity changes every 60 seconds
+> - `lln-worker` starts its 60-second analytics cycle — outcomes, patterns, Monte Carlo, regime detection, feature importance
 > - `web` builds the Next.js app and serves it on port 3000
-> - After ~30-60 seconds, the dashboard will show live data
+> - After ~30-60 seconds, the dashboard will show live data. The `/lln` section populates once ≥10 signal outcomes have been recorded.
 
 ---
 
 ## 🐳 Docker Services
 
-Seven containers run together, orchestrated by Docker Compose:
+Eight containers run together, orchestrated by Docker Compose:
 
 ### 🐘 `postgres` — PostgreSQL 16 Alpine
 - **Port:** 5432
@@ -272,6 +304,18 @@ Seven containers run together, orchestrated by Docker Compose:
 - Volume-mounted: `./backend:/app`
 - Restart policy: `restart: always`
 
+### 📐 `lln-worker` — LLN Quant Engine Worker
+- **No exposed port** — background process only
+- **Build context:** `./backend` (same image as `api`)
+- **Command:** `python -m app.worker.lln_quant_worker`
+- **Cycle frequency:** Every 60 seconds
+- Reads from existing tables (`signals`, `coins`, `dex_tokens`) — writes only to new analytics tables
+- Computes: signal outcomes (ROI/MFE/MAE/WIN/LOSS), pattern performance, strategy performance, Monte Carlo simulations, regime detection, feature importance
+- Requires ≥10 recorded signal outcomes before most analytics become meaningful
+- Depends on: `postgres` (healthy)
+- Volume-mounted: `./backend:/app`
+- Restart policy: `restart: always`
+
 ### 🌐 `web` — Next.js Frontend
 - **Port:** 3000
 - **Build context:** `./web`
@@ -280,7 +324,7 @@ Seven containers run together, orchestrated by Docker Compose:
 - The browser only ever talks to port 3000. All `/api/*` requests are rewritten to `http://api:8000/*` by Next.js server-side rewrites defined in `next.config.js`
 - Depends on: `api`
 
-> **Note:** All 7 containers are configured with `restart: always` (Docker Compose) — they automatically recover from crashes or system reboots.
+> **Note:** All 8 containers are configured with `restart: always` (Docker Compose) — they automatically recover from crashes or system reboots.
 
 ---
 
@@ -418,6 +462,78 @@ Seven containers run together, orchestrated by Docker Compose:
 - `_snapshot_dex_tokens(db)` — Saves OHLCV timeseries rows
 - `_get_active_tokens(db)` — Raw SQL DISTINCT ON query for one row per token
 - `main()` — Entry point with error handling + sleep loop
+
+---
+
+### 📐 Worker 4 — LLN Quant Engine (`backend/app/worker/lln_quant_worker.py`)
+
+**Purpose:** Apply the Law of Large Numbers to accumulated signal outcomes — computing statistical convergence metrics, Monte Carlo risk simulations, Bayesian win-rate estimates, and market regime detection. Runs as a zero-coupling sidecar: reads from existing tables, writes only to new analytics tables.
+
+**Cycle (every 60 seconds):**
+
+```
+1. compute_signal_outcomes(db)
+   └── Find signals that don't yet have an outcome record
+   └── Join Signal → Coin (current price data)
+   └── entry_price = (entry_low + entry_high) / 2
+   └── final_roi = (current_price - entry_price) / entry_price × 100
+   └── Classify: WIN (≥+50%) · NEUTRAL (-30% to +50%) · LOSS (≤-30%)
+   └── Compute MFE proxy (price_change_7d) and MAE proxy (low_24h delta)
+   └── Bulk INSERT into signal_outcomes (ON CONFLICT DO UPDATE)
+
+2. compute_pattern_performance(db)
+   └── Group all outcomes by: band · narrative · risk_level · liquidity_tier · "all"
+   └── Per group: win_rate, avg_roi, median_roi, Sharpe, Sortino, Profit Factor, EV
+   └── Bayesian: Beta(wins+1, losses+1) → 95% credible interval · P(EV>0)
+   └── Build return distribution: mean/std/skew/kurtosis/P10-P90/histogram
+   └── Upsert into pattern_performance + return_distributions
+
+3. compute_strategy_performance(db)
+   └── Apply 7 pre-defined filter combos to all outcomes:
+       All Signals · Strong Buy Only · Watch+Strong Buy ·
+       AI Narrative · Low Risk · Strong Buy+AI · Strong Buy+Low Risk
+   └── Full risk-adjusted metrics per strategy (Calmar, RoR, max drawdown)
+   └── Upsert into strategy_performance
+
+4. run_monte_carlo_simulations(db)
+   └── 5 outcome subsets: all_signals · strong_buy · watch_strong_buy ·
+       ai_narrative · low_risk
+   └── For each: 1,000 simulations × 100 trades
+       - Sample returns with replacement (numpy vectorized or pure Python)
+       - Track equity curve from $10,000 starting capital (2% risk/trade)
+       - Compute: P10/P50/P90 equity curves (50-point subsampled)
+         median_final, max_drawdown_median/worst, survival_probability, risk_of_ruin
+   └── Upsert into simulation_results
+
+5. detect_and_store_regime(db)
+   └── Query DexToken: avg price_change_1h, stddev, avg liquidity, avg buy_pressure
+   └── Classify:
+       trending      → avg_change >5% AND buy_pressure >60%
+       volatile      → price_change stddev >25%
+       low_liquidity → avg_liquidity <$5,000
+       ranging       → no dominant condition
+   └── Mark previous is_current=False → INSERT new RegimeStat (is_current=True)
+
+6. compute_feature_importance(db)
+   └── JOIN signal_outcomes → signals → sub-score fields
+   └── Pearson r of each feature vs final_roi:
+       composite_score · sentiment_score · technical_score ·
+       liquidity_score · momentum_score · band_rank
+   └── Rank by |r|, store direction (positive/negative)
+   └── Upsert into feature_importance
+```
+
+**Scientific libraries:** numpy (primary) · scipy (Bayesian CI, distribution stats) · scikit-learn (optional clustering). All have pure-Python fallbacks — the worker runs correctly even if these packages are unavailable.
+
+**Functions exposed:**
+- `compute_signal_outcomes(db)` — ROI calculation + WIN/NEUTRAL/LOSS classification
+- `compute_pattern_performance(db)` — Grouped statistical metrics + return distributions
+- `compute_strategy_performance(db)` — Pre-defined strategy filter evaluation
+- `run_monte_carlo_simulations(db)` — Equity curve simulation across 5 strategies
+- `detect_and_store_regime(db)` — Market regime classification from live DexToken data
+- `compute_feature_importance(db)` — Pearson correlation ranking of signal sub-scores
+- `run_cycle(db)` — One full analytics cycle (calls all 6 functions above)
+- `main()` — Entry point with 60-second sleep loop and error handling
 
 ---
 
@@ -843,6 +959,59 @@ Shorthand for high and critical risk events only.
 
 #### `GET /liquidity/events/{token_address}`
 Returns all liquidity events for a specific token address, most recent first.
+
+---
+
+## 📐 LLN Quant Engine — Analytics API
+
+All LLN endpoints serve **pre-computed data only** — no heavy computation in the request path. The `lln-worker` populates the analytics tables every 60 seconds.
+
+**Base path:** `/analytics`
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/analytics/overview` | Global stats: total outcomes, global win rate, global EV, Sharpe, best band/narrative, current regime |
+| GET | `/analytics/patterns` | Pattern performance grouped by `band`, `narrative`, `risk_level`, or `liquidity_tier` — with win rate, EV, CI, Bayesian WR, P(EV>0) |
+| GET | `/analytics/strategies` | Pre-defined strategy filter combinations with full risk-adjusted metrics |
+| GET | `/analytics/outcomes` | Recent signal outcomes — entry price, ROI, MFE, MAE, WIN/NEUTRAL/LOSS classification |
+| GET | `/analytics/distributions` | Return distribution stats per group — mean, median, std, skew, kurtosis, P10-P90, histogram buckets |
+| GET | `/analytics/risk` | Risk summary: global risk-of-ruin, max drawdown, survival probability across all strategies |
+| GET | `/analytics/simulations` | Monte Carlo simulation results — P10/P50/P90 equity curves, drawdown scenarios, survival probability |
+| GET | `/analytics/regimes` | Market regime history — trending/volatile/low_liquidity/ranging with performance per regime |
+| GET | `/analytics/features` | Feature importance ranking — Pearson correlation of signal sub-scores with final ROI |
+
+### Query Parameters
+
+#### `GET /analytics/patterns`
+| Param | Default | Description |
+|---|---|---|
+| `group_by` | `band` | Grouping dimension: `band` / `narrative` / `risk_level` / `liquidity_tier` |
+| `min_sample` | `3` | Minimum number of outcomes required for a group to appear |
+
+#### `GET /analytics/outcomes`
+| Param | Default | Description |
+|---|---|---|
+| `limit` | `100` | Maximum rows returned |
+| `outcome` | _(all)_ | Filter by outcome: `WIN` / `NEUTRAL` / `LOSS` |
+| `band` | _(all)_ | Filter by signal band |
+| `narrative` | _(all)_ | Filter by narrative category |
+
+#### `GET /analytics/distributions`
+| Param | Default | Description |
+|---|---|---|
+| `group_by` | `band` | Grouping dimension — same options as `/analytics/patterns` |
+
+#### `GET /analytics/regimes`
+| Param | Default | Description |
+|---|---|---|
+| `limit` | `20` | Number of recent regime snapshots to return |
+
+### Response Notes
+
+- All endpoints return `[]` or a sensible empty object when no data is available yet — never a 500 error
+- The `histogram_data` field in distribution responses is a JSON array of `{lower, upper, count}` bucket objects
+- Equity curve fields (`equity_p10`, `equity_p50`, `equity_p90`) in simulation responses are arrays of 50 equity values sampled at regular intervals
+- The `current` regime is identified by `is_current: true` in the regimes response
 
 ---
 
@@ -1634,6 +1803,126 @@ Point-in-time holder count and distribution snapshots.
 | `top10_pct` | Float | % of supply held by top 10 wallets |
 | `timestamp` | DateTime | Snapshot timestamp |
 
+### 📐 LLN Analytics Tables (migration `0005`)
+
+Seven new tables created by Alembic migration `0005`. All are written exclusively by `lln-worker`. Existing tables are never modified.
+
+#### `signal_outcomes` Table
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | Integer PK | Internal ID |
+| `signal_id` | Integer (Unique) | FK → signals.id — one outcome per signal |
+| `coin_symbol` | Text | Coin symbol at signal generation time |
+| `entry_price` | Float | Avg of signal entry_low and entry_high |
+| `exit_target` | Float | Signal exit target |
+| `stop_loss` | Float | Signal stop-loss |
+| `band` | Text | Signal band at generation time |
+| `risk_level` | Text | Signal risk level |
+| `narrative_category` | Text | Narrative at generation time (from dex_tokens) |
+| `liquidity_at_signal` | Float | Liquidity USD at signal time |
+| `buy_pressure_at_signal` | Float | Buy pressure % at signal time |
+| `roi_24h` | Float | ROI proxy using price_change_24h |
+| `roi_7d` | Float | ROI proxy using price_change_7d |
+| `mfe` | Float | Max Favorable Excursion (best gain reached) |
+| `mae` | Float | Max Adverse Excursion (worst loss reached) |
+| `final_roi` | Float | Final computed ROI % |
+| `outcome` | Text | `WIN` / `NEUTRAL` / `LOSS` |
+| `computed_at` | DateTime | When outcome was computed |
+
+#### `pattern_performance` Table
+
+Unique on `(group_by, group_value)`. Groups: `band`, `narrative`, `risk_level`, `liquidity_tier`, `all`.
+
+| Column | Type | Description |
+|---|---|---|
+| `group_by` | Text | Grouping dimension |
+| `group_value` | Text | Group value (e.g. `Strong Buy`, `AI`) |
+| `sample_size` | Integer | Number of outcomes in this group |
+| `win_count` / `loss_count` / `neutral_count` | Integer | Outcome counts |
+| `win_rate` | Float | Proportion of WIN outcomes |
+| `avg_roi` / `median_roi` | Float | Mean and median ROI |
+| `avg_mfe` / `avg_mae` | Float | Mean max favorable / adverse excursion |
+| `sharpe_ratio` / `sortino_ratio` | Float | Risk-adjusted return ratios |
+| `profit_factor` | Float | Gross profit / gross loss |
+| `expected_value` | Float | EV = (win_rate × avg_win) - ((1-win_rate) × avg_loss) |
+| `bayesian_win_rate` | Float | Beta posterior mean |
+| `ci_lower` / `ci_upper` | Float | 95% Bayesian credible interval |
+| `probability_positive_ev` | Float | P(EV > 0) |
+
+#### `return_distributions` Table
+
+Unique on `(group_by, group_value)`. Full return distribution stats per group.
+
+| Column | Type | Description |
+|---|---|---|
+| `mean` / `median` / `std` / `variance` | Float | Central tendency and spread |
+| `skewness` / `kurtosis` | Float | Distribution shape |
+| `p10` / `p25` / `p50` / `p75` / `p90` | Float | Percentile values |
+| `has_fat_tails` | Boolean | Kurtosis > 3 |
+| `positive_skew` | Boolean | Skewness > 0 (more upside outliers) |
+| `asymmetric_payoff` | Boolean | abs(avg_win) significantly > abs(avg_loss) |
+| `histogram_data` | JSON Text | Array of `{lower, upper, count}` buckets |
+
+#### `strategy_performance` Table
+
+One row per strategy name (unique). 7 pre-defined strategies evaluated.
+
+| Column | Type | Description |
+|---|---|---|
+| `strategy_name` | Text (Unique) | Strategy identifier |
+| `description` | Text | Human-readable description |
+| `total_signals` | Integer | Sample size |
+| `win_rate` / `avg_roi` / `median_roi` | Float | Core return metrics |
+| `best_roi` / `worst_roi` | Float | Best and worst single outcome |
+| `sharpe_ratio` / `sortino_ratio` / `calmar_ratio` | Float | Risk-adjusted ratios |
+| `profit_factor` / `expected_value` | Float | Profitability metrics |
+| `max_drawdown` | Float | Maximum drawdown % |
+| `risk_of_ruin` | Float | Probability of losing all capital |
+
+#### `regime_stats` Table
+
+One row per detection cycle. Current regime identified by `is_current=true`.
+
+| Column | Type | Description |
+|---|---|---|
+| `regime` | Text | `trending` / `volatile` / `low_liquidity` / `ranging` |
+| `detected_at` | DateTime | When this regime was detected |
+| `is_current` | Boolean | Whether this is the active regime |
+| `best_band` / `best_narrative` | Text | Best performing signal category in this regime |
+| `avg_win_rate` / `avg_roi` | Float | Signal performance during this regime |
+| `avg_price_change_1h` / `price_change_stddev` | Float | Market conditions at detection |
+| `avg_liquidity` / `avg_buy_pressure` | Float | Liquidity and momentum conditions |
+| `token_count` | Integer | Number of tokens observed |
+
+#### `simulation_results` Table
+
+One row per strategy (unique). Monte Carlo output.
+
+| Column | Type | Description |
+|---|---|---|
+| `strategy` | Text (Unique) | Strategy key (e.g. `all_signals`, `strong_buy`) |
+| `n_simulations` | Integer | Number of simulations run (default: 1000) |
+| `n_trades` | Integer | Trades per simulation (default: 100) |
+| `equity_p10` / `equity_p50` / `equity_p90` | JSON Text | 50-point equity curve arrays |
+| `median_final_equity` | Float | Median ending capital across all sims |
+| `p10_final_equity` / `p90_final_equity` | Float | Worst/best 10% final equity |
+| `max_drawdown_median` / `max_drawdown_worst` | Float | Median and P90 max drawdown % |
+| `survival_probability` | Float | % of sims ending with equity > $0 |
+| `risk_of_ruin` | Float | % of sims ending with equity ≤ $0 |
+
+#### `feature_importance` Table
+
+One row per feature name (unique).
+
+| Column | Type | Description |
+|---|---|---|
+| `feature_name` | Text (Unique) | Feature key (e.g. `sentiment_score`) |
+| `importance_score` | Float | abs(Pearson r) — absolute predictive strength |
+| `correlation_with_roi` | Float | Signed Pearson r with final_roi |
+| `rank` | Integer | Rank by importance (1 = most predictive) |
+| `direction` | Text | `positive` / `negative` |
+
 ---
 
 ## ⚡ WebSocket Streams
@@ -1948,6 +2237,88 @@ Real-time liquidity change monitoring.
 - SWR refresh every 15 seconds
 - Empty state: "No events found — liquidity events are generated automatically once DEX tokens have been tracked for at least one cycle."
 
+### `/lln` — LLN Terminal
+
+Top-level Law of Large Numbers intelligence dashboard. Sub-navigation bar links to all 7 LLN sub-pages.
+
+**What's on this page:**
+- **Stat tiles (6):** Total signals analysed · Global win rate · Global EV · Current regime · Global Sharpe · Profit factor
+- **Outcome Donut:** SVG donut chart showing WIN / NEUTRAL / LOSS proportions across all outcomes
+- **Band performance bars:** Win rate and EV bar per signal band (Strong Buy / Watch / Risky)
+- **Equity curve:** SVG line chart with P10 / P50 / P90 shaded equity paths from `all_signals` Monte Carlo simulation
+- **Risk metrics panel:** Global risk-of-ruin · survival probability · max drawdown (median and worst)
+- **LLN principle banner:** Explains the statistical convergence methodology
+- SWR polling every 30 seconds (overview) and 60 seconds (simulations, patterns)
+- Empty state: informative message when fewer than 10 outcomes have been recorded
+
+### `/lln/patterns` — Pattern Intelligence
+
+Statistical signal performance grouped by configurable dimension.
+
+**What's on this page:**
+- **Group-by tabs:** Signal Band · Narrative · Risk Level · Liquidity Tier
+- **Sortable table columns:** Group · Win Rate (with 95% CI) · EV · Avg ROI · Sharpe · Profit Factor · Confidence badge P(EV>0)
+- **Expandable rows:** Click any row to reveal — Avg MFE · Avg MAE · Median ROI · Sortino · Bayesian WR · Win/Loss/Neutral counts · ROI histogram SVG (green bars = positive returns, red = negative, dashed zero line)
+- Green = positive EV, red = negative EV — consistent color coding
+- SWR polling every 30 seconds
+
+### `/lln/strategies` — Strategy Performance
+
+Pre-defined filter combination performance evaluation.
+
+**What's on this page:**
+- **Strategy cards** — one per strategy (7 strategies): All Signals · Strong Buy Only · Watch+Strong Buy · AI Narrative · Low Risk Only · Strong Buy+AI · Strong Buy+Low Risk
+- Each card shows: EV badge (green/red), sample size, win/loss/neutral bar, 8-metric grid (Win Rate · Avg ROI · Median ROI · Sharpe · Sortino · Profit Factor · Max Drawdown · Risk of Ruin), Calmar ratio footer
+- Cards sorted by descending EV
+- "Best strategy" banner shows top EV strategy name
+- SWR polling every 30 seconds
+
+### `/lln/outcomes` — Signal Outcomes
+
+Recent resolved signal outcomes with entry vs current price comparison.
+
+**What's on this page:**
+- **Summary stats row:** Total shown · WIN count · NEUTRAL count · Avg ROI
+- **Filter tabs:** All / WIN / NEUTRAL / LOSS
+- **Table columns:** Coin (symbol + narrative) · Band badge · Entry price · Exit target · Stop-loss · ROI (colored +/-) · MFE/MAE excursion bar SVG · Result badge (WIN/NEUTRAL/LOSS)
+- **ExcursionBar:** Mini inline SVG showing green (MFE) and red (MAE) bars proportional to max favorable/adverse excursion
+- SWR polling every 30 seconds
+
+### `/lln/risk` — Risk Lab
+
+Monte Carlo simulation results and drawdown scenario analysis.
+
+**What's on this page:**
+- **Global risk banner (4 tiles):** Global Survival P · Risk of Ruin · Max DD (Median) · Max DD (Worst 10%)
+- **Simulation cards** — one per strategy subset (5 cards): runs, trade count, equity curve SVG, Median Final equity · Survival P · Risk of Ruin · Max DD (P90), P10/P50/P90 final equity row
+- **EquityCurve SVG:** Shaded band between P10 and P90 paths with P50 median line. Green if median final ≥ $10,000, red otherwise. Dashed baseline at $10,000 starting capital.
+- **Methodology note:** Starting equity · risk per trade · sampling method · percentile definitions · survival definition
+- Requires ≥10 signal outcomes — shows informative empty state otherwise
+
+### `/lln/regimes` — Regime Analysis
+
+Market state detection history and per-regime signal performance.
+
+**What's on this page:**
+- **Current regime banner:** Large colored banner showing active regime (Trending=green · Volatile=red · Low Liquidity=yellow · Ranging=blue) with win rate
+- **Regime timeline SVG:** Horizontal colored band showing the last 20 regime snapshots oldest→newest
+- **Regime distribution:** Horizontal bar chart — how often each regime has been detected
+- **Regime cards:** One per detection snapshot — market conditions (avg 1h change, volatility, liquidity, buy pressure), signal performance (win rate, avg ROI, best band/narrative), token count, detection timestamp
+- Current regime card is highlighted with colored border
+- SWR polling every 60 seconds
+
+### `/lln/features` — Feature Analysis
+
+Predictive importance ranking of signal sub-scores against ROI outcomes.
+
+**What's on this page:**
+- **Summary tiles:** Top feature name · Positive signals count · Negative signals count
+- **Importance bars** — one per feature: horizontal bar (importance = |r|), centered correlation bar (positive right of center in green, negative left in red), direction badge (↑ Positive / ↓ Negative), rank badge
+- **Correlation heatmap SVG:** Matrix of approximate cross-correlations between features, colored green (positive) to red (negative)
+- **Interpretation guide:** Explains what positive/negative correlation means and how importance = |Pearson r|
+- Features ranked by descending |r| with final ROI
+- SWR polling every 30 seconds
+
 ---
 
 ## 🧩 Frontend Components
@@ -2165,12 +2536,11 @@ helm/meme-trader-ai/
     ├── web/
     │   ├── deployment.yaml         # Next.js Deployment
     │   └── service.yaml            # ClusterIP/LoadBalancer on port 3000
-    ├── worker/
-    │   └── deployment.yaml         # Signal generation worker Deployment
-    ├── dex-worker/
-    │   └── deployment.yaml         # DEX token sniping worker Deployment
-    ├── behavioral-worker/
-    │   └── deployment.yaml         # Behavioral intelligence worker Deployment
+    ├── workers/
+    │   ├── tasks-worker.yaml        # Signal generation worker Deployment
+    │   ├── dex-worker.yaml          # DEX token sniping worker Deployment
+    │   ├── behavioral-worker.yaml   # Behavioral intelligence worker Deployment
+    │   └── lln-worker.yaml          # LLN Quant Engine worker Deployment
     ├── postgres/
     │   ├── statefulset.yaml        # PostgreSQL StatefulSet with PVC
     │   └── service.yaml            # Headless Service
@@ -2193,7 +2563,23 @@ image:
     pullPolicy: Always
 ```
 
-> Worker containers (`worker`, `dex-worker`, `behavioral-worker`) share the same `api` image — they run different `command` entrypoints.
+> Worker containers (`worker`, `dex-worker`, `behavioral-worker`, `lln-worker`) share the same `api` image — they run different `command` entrypoints.
+
+The `lln-worker` Deployment uses `resources.llnWorker` from `values.yaml` (256Mi/512Mi memory — higher than other workers to accommodate numpy/scipy Monte Carlo vectorisation):
+
+```yaml
+replicaCount:
+  llnWorker: 1
+
+resources:
+  llnWorker:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+```
 
 ### Deploying with the Makefile
 
@@ -2348,13 +2734,21 @@ meme-trader-ai/
 │   │   │   ├── behavioral_signal.py # BehavioralSignal model
 │   │   │   ├── liquidity_event.py # LiquidityEvent model
 │   │   │   ├── holder_snapshot.py # HolderSnapshot model
-│   │   │   └── token_timeseries.py # TokenTimeseries model
+│   │   │   ├── token_timeseries.py # TokenTimeseries model
+│   │   │   └── lln.py             # 7 LLN analytics models (signal_outcomes,
+│   │   │                          #   pattern_performance, return_distributions,
+│   │   │                          #   strategy_performance, regime_stats,
+│   │   │                          #   simulation_results, feature_importance)
 │   │   │
 │   │   ├── schemas/               # Pydantic request/response schemas
 │   │   │   ├── coin.py            # CoinCreate, CoinOut, CoinUpdate
 │   │   │   ├── signal.py          # SignalCreate, SignalOut
 │   │   │   ├── alert.py           # AlertCreate, AlertOut
-│   │   │   └── dex_token.py       # DexTokenCreate, DexTokenOut
+│   │   │   ├── dex_token.py       # DexTokenCreate, DexTokenOut
+│   │   │   └── lln.py             # LLNOverview, PatternPerformanceOut,
+│   │   │                          #   ReturnDistributionOut, StrategyPerformanceOut,
+│   │   │                          #   SignalOutcomeOut, SimulationResultOut,
+│   │   │                          #   RegimeStatOut, FeatureImportanceOut, RiskSummaryOut
 │   │   │
 │   │   ├── repositories/          # Database access layer (CRUD operations)
 │   │   │   ├── coin_repo.py       # Coin upsert, search, get
@@ -2376,7 +2770,9 @@ meme-trader-ai/
 │   │   │   ├── pattern_detector.py  # detect_patterns(candles) → list[PatternResult] (9 patterns)
 │   │   │   ├── behavioral_engine.py # Orchestrates timeseries fetch → pattern detect → persist
 │   │   │   ├── signal_fusion.py     # compute_fusion(FusionInput, weights) → FusionResult
-│   │   │   └── liquidity_tracker.py # assess_liquidity_event() → LiquidityRiskResult
+│   │   │   ├── liquidity_tracker.py # assess_liquidity_event() → LiquidityRiskResult
+│   │   │   └── lln_analytics.py     # LLN Quant Engine — outcome modeling, pattern/strategy
+│   │   │                            #   performance, Monte Carlo, regime detection, feature importance
 │   │   │
 │   │   ├── routes/                # FastAPI route handlers
 │   │   │   ├── health.py          # GET /health
@@ -2388,12 +2784,15 @@ meme-trader-ai/
 │   │   │   ├── wallets.py         # GET /wallets, GET /wallets/{addr}/transactions, POST /classify
 │   │   │   ├── behavioral.py      # GET/POST /behavioral/signals, POST /analyze, GET /summary
 │   │   │   ├── liquidity.py       # GET /liquidity/events, /suspicious, /events/{addr}
+│   │   │   ├── analytics_lln.py   # GET /analytics/overview|patterns|strategies|outcomes|
+│   │   │   │                      #   distributions|risk|simulations|regimes|features
 │   │   │   └── ws.py              # WS /ws/signals, /ws/snipes, /ws/ticker
 │   │   │
 │   │   ├── worker/
 │   │   │   ├── tasks.py              # CoinGecko signal generation loop
 │   │   │   ├── dex_tasks.py          # DEX sniping loop
 │   │   │   ├── behavioral_worker.py  # Behavioral intelligence loop (60s cycle)
+│   │   │   ├── lln_quant_worker.py   # LLN Quant Engine loop (60s cycle, sidecar)
 │   │   │   └── pipelines/            # Per-source data pipeline modules
 │   │   │       ├── dexscreener.py     # DexScreener new pairs + boosted tokens
 │   │   │       ├── pumpfun.py         # Pump.fun new + trending coins
@@ -2412,10 +2811,11 @@ meme-trader-ai/
 │   │   │   ├── 0001_initial.py    # coins, signals, alerts tables
 │   │   │   ├── 0002_dex_tokens.py # dex_tokens table
 │   │   │   ├── 0003_...py         # earlier migrations
-│   │   │   └── 0004_add_intelligence_tables.py  # 6 new intelligence tables
+│   │   │   ├── 0004_add_intelligence_tables.py  # 6 intelligence tables
+│   │   │   └── 0005_add_lln_tables.py           # 7 LLN analytics tables
 │   │   └── alembic.ini
 │   │
-│   ├── requirements.txt           # Python dependencies
+│   ├── requirements.txt           # Python dependencies (incl. numpy, scipy, scikit-learn for LLN)
 │   └── Dockerfile                 # Python 3.11 slim image
 │
 ├── web/
@@ -2439,8 +2839,23 @@ meme-trader-ai/
 │   │   │   └── page.tsx           # /wallets — Wallet intelligence
 │   │   ├── behavioral/
 │   │   │   └── page.tsx           # /behavioral — Behavioral pattern signals
-│   │   └── liquidity/
-│   │       └── page.tsx           # /liquidity — Liquidity event monitoring
+│   │   ├── liquidity/
+│   │   │   └── page.tsx           # /liquidity — Liquidity event monitoring
+│   │   └── lln/
+│   │       ├── layout.tsx         # /lln sub-navigation (7 pages)
+│   │       ├── page.tsx           # /lln — LLN Terminal (overview dashboard)
+│   │       ├── patterns/
+│   │       │   └── page.tsx       # /lln/patterns — Pattern Intelligence
+│   │       ├── strategies/
+│   │       │   └── page.tsx       # /lln/strategies — Strategy Performance
+│   │       ├── outcomes/
+│   │       │   └── page.tsx       # /lln/outcomes — Signal Outcomes
+│   │       ├── risk/
+│   │       │   └── page.tsx       # /lln/risk — Risk Lab (Monte Carlo)
+│   │       ├── regimes/
+│   │       │   └── page.tsx       # /lln/regimes — Regime Analysis
+│   │       └── features/
+│   │           └── page.tsx       # /lln/features — Feature Analysis
 │   │
 │   ├── components/                # Reusable React components
 │   │   ├── Nav.tsx                # Navigation bar (hamburger + desktop)
@@ -2462,20 +2877,28 @@ meme-trader-ai/
 │   ├── types/
 │   │   └── index.ts               # TypeScript types (Coin, Signal, Alert, DexToken,
 │   │                              #   Wallet, WalletTransaction, BehavioralSignal,
-│   │                              #   LiquidityEvent, BehavioralSummary)
+│   │                              #   LiquidityEvent, BehavioralSummary,
+│   │                              #   LLNOverview, PatternPerformance, ReturnDistribution,
+│   │                              #   StrategyPerformance, SignalOutcome, SimulationResult,
+│   │                              #   RegimeStat, FeatureImportance, RiskSummary)
 │   │
 │   ├── next.config.js             # Proxy rewrites: /api/* → http://api:8000/*
 │   ├── tailwind.config.ts         # Tailwind configuration
 │   ├── tsconfig.json              # TypeScript config
 │   └── Dockerfile                 # Node 20 Alpine multi-stage build
 │
-├── docker-compose.yml             # All 7 services (restart: always on all)
+├── docker-compose.yml             # All 8 services (restart: always on all)
 ├── Makefile                       # Helm and kubectl shortcuts (helm-lint, k8s-deploy, etc.)
 ├── helm/
 │   └── meme-trader-ai/
 │       ├── Chart.yaml             # Chart metadata
 │       ├── values.yaml            # Default values (GHCR image refs)
 │       └── templates/             # Kubernetes manifests (Deployments, StatefulSets, Services, etc.)
+│           └── workers/
+│               ├── tasks-worker.yaml       # Signal worker
+│               ├── dex-worker.yaml         # DEX sniping worker
+│               ├── behavioral-worker.yaml  # Behavioral worker
+│               └── lln-worker.yaml         # LLN Quant Engine worker
 ├── .env.example                   # Template environment file
 ├── .claude/                       # Claude project rules and agent definitions
 │   ├── rules/                     # Architecture, trading logic, code style, risk management rules

@@ -18,6 +18,7 @@ replicaCount:
   worker: 1
   dexWorker: 1
   behavioralWorker: 1
+  llnWorker: 1
 
 postgres:
   enabled: true
@@ -73,6 +74,13 @@ resources:
     limits:
       cpu: 250m
       memory: 256Mi
+  llnWorker:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
 
 autoscaling:
   enabled: false
