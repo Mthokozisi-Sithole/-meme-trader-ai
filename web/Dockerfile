@@ -11,6 +11,8 @@ RUN npm run build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
+# Install debugging tools (curl, wget, netcat)
+RUN apk add --no-cache curl wget netcat-openbsd
 ENV NODE_ENV=production
 # Bind to all interfaces so Kubernetes Services, port-forward, and Ingress work.
 # Next.js standalone server.js reads HOSTNAME; without this it defaults to localhost (127.0.0.1),

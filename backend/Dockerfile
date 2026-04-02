@@ -2,9 +2,10 @@ FROM python:3.11-slim AS base
 
 WORKDIR /app
 
-# Install system deps
+# Install system deps + debugging tools (curl, wget, netcat)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev gcc && \
+    libpq-dev gcc \
+    curl wget netcat-openbsd && \
     rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
